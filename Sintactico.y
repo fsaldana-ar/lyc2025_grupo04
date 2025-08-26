@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "y.tab.h"
 int yystopparser=0;
-FILE  *yyin;
+extern FILE  *yyin;
 
   int yyerror();
   int yylex();

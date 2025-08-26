@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 #include "y.tab.h"
-FILE  *yyin;
-int yylval;
+extern FILE  *yyin;
+extern int yylval;
 char *yyltext;
 
 
