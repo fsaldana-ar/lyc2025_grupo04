@@ -50,8 +50,13 @@ void agregarVariable(const char* nombre, const char* tipo) {
 }
 
 void agregarConstante(const char* valor, const char* tipo) {
-    if (existeSimbolo(valor, tipo)) return;
-    strcpy(tabla[indiceTabla].nombre, valor);
+    // Crear nombre único para constantes
+    char nombreUnico[50];
+    sprintf(nombreUnico, "const_%s_%d", tipo, indiceTabla);
+    
+    if (existeSimbolo(nombreUnico, tipo)) return;
+    
+    strcpy(tabla[indiceTabla].nombre, nombreUnico);
     strcpy(tabla[indiceTabla].tipo, tipo);
     strcpy(tabla[indiceTabla].valor, valor);
     tabla[indiceTabla].longitud = strlen(valor);
@@ -65,24 +70,26 @@ void volcarTabla() {
         return;
     }
 
-    fprintf(f, "===============================\n");
-    fprintf(f, " TABLA DE SÍMBOLOS - LYC 2025 \n");
-    fprintf(f, "===============================\n\n");
+    fprintf(f, "=====================================================\n");
+    fprintf(f, "               TABLA DE SÍMBOLOS - LYC 2025          \n");
+    fprintf(f, "=====================================================\n\n");
 
-    fprintf(f, "NOMBRE\t\tTIPODATO\tVALOR\t\tLONGITUD\n");
-    fprintf(f, "---------------------------------------------------\n");
+    fprintf(f, "%-15s %-10s %-20s %-10s\n", "NOMBRE", "TIPO", "VALOR", "LONGITUD");
+    fprintf(f, "-----------------------------------------------------\n");
 
     for (int i = 0; i < indiceTabla; i++) {
-        fprintf(f, "%s\t\t%s\t\t%s\t\t%d\n",
+        fprintf(f, "%-15s %-10s %-20s %-10d\n",
                 tabla[i].nombre,
                 tabla[i].tipo,
                 tabla[i].valor,
                 tabla[i].longitud);
     }
 
+    fprintf(f, "\nTotal de entradas: %d\n", indiceTabla);
     fclose(f);
     printf("\n>> symbol-table.txt generado correctamente\n");
 }
+
 %}
 
 /* ============================
@@ -135,8 +142,16 @@ sentencia:
 
 /* Asignaciones */
 asignacion:
-    ID ASIG expresion PYC
-        { printf("Regla: Asignacion -> ID := Expresion;\n"); }
+    ID ASIG expresion PYC {
+        // Verificar si la variable fue declarada
+        if (!existeSimbolo($1, "Int") && !existeSimbolo($1, "Float") && 
+            !existeSimbolo($1, "String") && !existeSimbolo($1, "Date")) {
+            printf("ADVERTENCIA: Variable '%s' no declarada con INIT\n", $1);
+            // Opcional: agregarla automáticamente con tipo inferido
+            agregarVariable($1, "Int"); // Asumimos Int por defecto
+        }
+        printf("Regla: Asignacion -> ID := Expresion;\n"); 
+    }
 ;
 
 /* Expresiones aritméticas */
@@ -159,7 +174,13 @@ factor:
   | CTE_FLOAT { agregarConstante($1, "Float"); }
   | CTE_STR   { agregarConstante($1, "String"); }
   | PAR_IZQ expresion PAR_DER
-  | CONVDATE PAR_IZQ expresion RESTA expresion RESTA expresion PAR_DER
+  | CONVDATE PAR_IZQ expresion RESTA expresion RESTA expresion PAR_DER {
+        // Crear un nombre único para la fecha convertida
+        char fechaStr[20];
+        sprintf(fechaStr, "fecha_%d", indiceTabla);
+        agregarVariable(fechaStr, "Date");
+        printf("Regla: ConvDate procesada\n");
+    }
 ;
 
 /* Condiciones */

@@ -82,7 +82,6 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 ","             { printf("\nComa: %s\n", yytext); return COMA; }
 ";"             { printf("\nPuntoComa: %s\n", yytext); return PYC; }
 
-
 {CTE_INT} {
     long val = atol(yytext);
     if (val > 32767 || val < -32768) {
@@ -90,24 +89,40 @@ ID          {LETRA}({LETRA}|{DIGITO})*
         exit(1);
     }
     printf("\nConstante Entera: %s\n", yytext);
+    strcpy(yylval.cadena, yytext);  // Asigna el valor al union
     return CTE_INT;
 }
 
 {CTE_FLOAT} {
     printf("\nConstante Real: %s\n", yytext);
+    strcpy(yylval.cadena, yytext);  // Asigna el valor al union
     return CTE_FLOAT;
 }
 
-
 \"([^\\"]|\\.)*\" {
-    if (strlen(yytext) - 2 > 50) { // -2 por las comillas
+    if (strlen(yytext) - 2 > 50) {
         printf("ERROR LEXICO: String demasiado largo: %s\n", yytext);
         exit(1);
     }
     printf("\nConstante String: %s\n", yytext);
+
+
+    // Remover comillas y copiar el valor
+    char valor[50];
+    int j = 0;
+    for (int i = 1; i < strlen(yytext) - 1; i++) {
+        if (yytext[i] == '\\' && yytext[i+1] == '\"') {
+            valor[j++] = '\"';
+            i++;
+        } else {
+            valor[j++] = yytext[i];
+        }
+    }
+    valor[j] = '\0';
+    
+    strcpy(yylval.cadena, valor);
     return CTE_STR;
 }
-
 
 {ID} {
     if (strlen(yytext) > 30) {
@@ -115,6 +130,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
         exit(1);
     }
     printf("\nIdentificador: %s\n", yytext);
+    strcpy(yylval.cadena, yytext);  // Asigna el valor al union
     return ID;
 }
 
