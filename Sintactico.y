@@ -1,85 +1,169 @@
-// Usa Lexico_ClasePractica
-//Solo expresiones sin ()
 %{
 #include <stdio.h>
 #include <stdlib.h>
 #include "y.tab.h"
-int yystopparser=0;
-FILE  *yyin;
 
-  int yyerror();
-  int yylex();
+int yystopparser = 0;
+FILE *yyin;
 
-
+int yyerror();
+int yylex();
 %}
 
-%token CTE_INT
+/* ============================
+   Tokens (del Lexer)
+   ============================ */
+%token CTE_INT CTE_FLOAT CTE_STR
 %token ID
 %token ASIG
-%token SUMA
-%token MULT
-%token RESTA
-%token DIV
+%token SUMA MULT RESTA DIV MOD
 %token PAR_IZQ PAR_DER COR_IZQ COR_DER
-%token IF ELSE WHILE FOR RETURN INT FLOAT CHAR VOID
+%token LLA_IZQ LLA_DER DOS_PUNTOS
+%token IF ELSE WHILE FOR RETURN
+%token INIT READ WRITE
+%token INT FLOAT STRING
 %token IGUAL DIST MENOR_IG MAYOR_IG
-%token AND_LOG OR_LOG NOT_LOG
-%token INC DEC
 %token MENOR MAYOR
-%token MOD COMA PYC
+%token AND_LOG OR_LOG NOT_LOG
+%token AND OR NOT
+%token ISZERO CONVDATE
+%token COMA PYC
 
 %%
-asignacion :
-	ID IGUAL CTE_INT { printf(" FIN\n"); } ;
 
+/* ============================
+   Reglas Sintácticas
+   ============================ */
 
+programa:
+    lista_sentencias
+;
 
-sentencia:  	   
-	asignacion {printf(" FIN\n");} ;
+lista_sentencias:
+    sentencia
+  | lista_sentencias sentencia
+;
 
-asignacion: 
-          ID ASIG expresion {printf("    ID = Expresion es ASIGNACION\n");}
-	  ;
+sentencia:
+    asignacion
+  | seleccion
+  | iteracion
+  | declaracion
+  | io
+;
 
+/* Asignaciones */
+asignacion:
+    ID ASIG expresion PYC
+        { printf("Regla: Asignacion -> ID := Expresion;\n"); }
+;
+
+/* Expresiones aritméticas */
 expresion:
-         termino {printf("    Termino es Expresion\n");}
-	 |expresion SUMA termino {printf("    Expresion+Termino es Expresion\n");}
-	 |expresion RESTA termino {printf("    Expresion-Termino es Expresion\n");}
-	 ;
+    termino
+  | expresion SUMA termino
+  | expresion RESTA termino
+;
 
-termino: 
-       factor {printf("    Factor es Termino\n");}
-       |termino MULT factor {printf("     Termino*Factor es Termino\n");}
-       |termino DIV factor {printf("     Termino/Factor es Termino\n");}
-       ;
+termino:
+    factor
+  | termino MULT factor
+  | termino DIV factor
+  | termino MOD factor
+;
 
-factor: 
-      ID {printf("    ID es Factor \n");}
-      | CTE_INT {printf("    CTE_INT es Factor\n");}
-	| PAR_IZQ expresion PAR_DER {printf("    Expresion entre parentesis es Factor\n");}
-     	;
+factor:
+    ID
+  | CTE_INT
+  | CTE_FLOAT
+  | CTE_STR
+  | PAR_IZQ expresion PAR_DER
+  | CONVDATE PAR_IZQ expresion RESTA expresion RESTA expresion PAR_DER
+;
+
+
+/* Condiciones */
+condicion:
+    comparacion
+  | ISZERO PAR_IZQ expresion PAR_DER
+  | condicion AND comparacion
+  | condicion OR comparacion
+  | NOT condicion
+;
+
+
+comparacion:
+    expresion MENOR expresion
+  | expresion MAYOR expresion
+  | expresion MENOR_IG expresion
+  | expresion MAYOR_IG expresion
+  | expresion IGUAL expresion
+  | expresion DIST expresion
+;
+
+/* If / If-Else */
+seleccion:
+    IF PAR_IZQ condicion PAR_DER bloque
+  | IF PAR_IZQ condicion PAR_DER bloque ELSE bloque
+;
+
+/* While */
+iteracion:
+    WHILE PAR_IZQ condicion PAR_DER bloque
+;
+
+/* Bloques de código */
+bloque:
+    LLA_IZQ lista_sentencias LLA_DER
+;
+
+/* Declaraciones de variables */
+declaracion:
+    INIT LLA_IZQ lista_declaraciones LLA_DER
+;
+
+lista_declaraciones:
+    declaracion_tipo
+  | lista_declaraciones declaracion_tipo
+;
+
+declaracion_tipo:
+    lista_ids DOS_PUNTOS tipo PYC
+;
+
+lista_ids:
+    ID
+  | lista_ids COMA ID
+;
+
+tipo:
+    INT
+  | FLOAT
+  | STRING
+;
+
+/* Entrada/Salida */
+io:
+    READ PAR_IZQ ID PAR_DER PYC
+  | WRITE PAR_IZQ expresion PAR_DER PYC
+;
+
 %%
 
-
-int main(int argc, char *argv[])
-{
-    if((yyin = fopen(argv[1], "rt"))==NULL)
-    {
+/* ============================
+   Funciones auxiliares
+   ============================ */
+int main(int argc, char *argv[]) {
+    if((yyin = fopen(argv[1], "rt"))==NULL) {
         printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);
-       
-    }
-    else
-    { 
-        
+    } else {
         yyparse();
-        
+        fclose(yyin);
     }
-	fclose(yyin);
-        return 0;
+    return 0;
 }
-int yyerror(void)
-     {
-       printf("Error Sintactico\n");
-	 exit (1);
-     }
 
+int yyerror(void) {
+    printf("Error Sintactico\n");
+    exit(1);
+}
