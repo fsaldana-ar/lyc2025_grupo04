@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "y.tab.h"
 
 int yystopparser = 0;
@@ -8,26 +9,106 @@ FILE *yyin;
 
 int yyerror();
 int yylex();
+
+/* ============================
+   Estructura de la tabla de símbolos
+   ============================ */
+typedef struct {
+    char nombre[50];   // nombre de la variable o constante
+    char tipo[10];     // Int, Float, String
+    char valor[50];    // valor (solo para constantes)
+    int longitud;      // longitud del nombre o del string
+} Simbolo;
+
+Simbolo tabla[500];
+int indiceTabla = 0;
+
+/* Lista temporal para variables sin tipo aún */
+char idsPendientes[500][50];
+int cantIdsPendientes = 0;
+
+/* ============================
+   Funciones auxiliares
+   ============================ */
+int existeSimbolo(const char* nombre, const char* tipo) {
+    for (int i = 0; i < indiceTabla; i++) {
+        if (strcmp(tabla[i].nombre, nombre) == 0 &&
+            strcmp(tabla[i].tipo, tipo) == 0) {
+            return 1; // ya existe
+        }
+    }
+    return 0;
+}
+
+void agregarVariable(const char* nombre, const char* tipo) {
+    if (existeSimbolo(nombre, tipo)) return;
+    strcpy(tabla[indiceTabla].nombre, nombre);
+    strcpy(tabla[indiceTabla].tipo, tipo);
+    strcpy(tabla[indiceTabla].valor, "—");
+    tabla[indiceTabla].longitud = strlen(nombre);
+    indiceTabla++;
+}
+
+void agregarConstante(const char* valor, const char* tipo) {
+    if (existeSimbolo(valor, tipo)) return;
+    strcpy(tabla[indiceTabla].nombre, valor);
+    strcpy(tabla[indiceTabla].tipo, tipo);
+    strcpy(tabla[indiceTabla].valor, valor);
+    tabla[indiceTabla].longitud = strlen(valor);
+    indiceTabla++;
+}
+
+void volcarTabla() {
+    FILE *f = fopen("symbol-table.txt", "w");
+    if (!f) {
+        printf("No se pudo abrir symbol-table.txt para escritura\n");
+        return;
+    }
+
+    fprintf(f, "===============================\n");
+    fprintf(f, " TABLA DE SÍMBOLOS - LYC 2025 \n");
+    fprintf(f, "===============================\n\n");
+
+    fprintf(f, "NOMBRE\t\tTIPODATO\tVALOR\t\tLONGITUD\n");
+    fprintf(f, "---------------------------------------------------\n");
+
+    for (int i = 0; i < indiceTabla; i++) {
+        fprintf(f, "%s\t\t%s\t\t%s\t\t%d\n",
+                tabla[i].nombre,
+                tabla[i].tipo,
+                tabla[i].valor,
+                tabla[i].longitud);
+    }
+
+    fclose(f);
+    printf("\n>> symbol-table.txt generado correctamente\n");
+}
 %}
 
 /* ============================
    Tokens (del Lexer)
    ============================ */
-%token CTE_INT CTE_FLOAT CTE_STR
-%token ID
+%union {
+    char cadena[50];
+}
+
+%token <cadena> CTE_INT CTE_FLOAT CTE_STR
+%token <cadena> ID
 %token ASIG
 %token SUMA MULT RESTA DIV MOD
 %token PAR_IZQ PAR_DER COR_IZQ COR_DER
 %token LLA_IZQ LLA_DER DOS_PUNTOS
 %token IF ELSE WHILE FOR RETURN
 %token INIT READ WRITE
-%token INT FLOAT STRING
+%token <cadena> INT FLOAT STRING
 %token IGUAL DIST MENOR_IG MAYOR_IG
 %token MENOR MAYOR
 %token AND_LOG OR_LOG NOT_LOG
 %token AND OR NOT
 %token ISZERO CONVDATE
 %token COMA PYC
+
+%type <cadena> tipo
 
 %%
 
@@ -69,18 +150,17 @@ termino:
     factor
   | termino MULT factor
   | termino DIV factor
-  | termino MOD factor
+  | termino MOD factor   { printf("Regla: Termino -> Termino %% Factor\n"); }
 ;
 
 factor:
     ID
-  | CTE_INT
-  | CTE_FLOAT
-  | CTE_STR
+  | CTE_INT   { agregarConstante($1, "Int"); }
+  | CTE_FLOAT { agregarConstante($1, "Float"); }
+  | CTE_STR   { agregarConstante($1, "String"); }
   | PAR_IZQ expresion PAR_DER
   | CONVDATE PAR_IZQ expresion RESTA expresion RESTA expresion PAR_DER
 ;
-
 
 /* Condiciones */
 condicion:
@@ -90,7 +170,6 @@ condicion:
   | condicion OR comparacion
   | NOT condicion
 ;
-
 
 comparacion:
     expresion MENOR expresion
@@ -128,18 +207,24 @@ lista_declaraciones:
 ;
 
 declaracion_tipo:
-    lista_ids DOS_PUNTOS tipo PYC
+    lista_ids DOS_PUNTOS tipo PYC {
+        for (int i = 0; i < cantIdsPendientes; i++) {
+            agregarVariable(idsPendientes[i], $3);
+        }
+        cantIdsPendientes = 0; // limpiar lista
+        printf("Regla: Declaracion -> lista_ids : tipo;\n");
+    }
 ;
 
 lista_ids:
-    ID
-  | lista_ids COMA ID
+    ID { strcpy(idsPendientes[cantIdsPendientes++], $1); }
+  | lista_ids COMA ID { strcpy(idsPendientes[cantIdsPendientes++], $3); }
 ;
 
 tipo:
-    INT
-  | FLOAT
-  | STRING
+    INT    { strcpy($$, "Int"); }
+  | FLOAT  { strcpy($$, "Float"); }
+  | STRING { strcpy($$, "String"); }
 ;
 
 /* Entrada/Salida */
@@ -160,6 +245,8 @@ int main(int argc, char *argv[]) {
         yyparse();
         fclose(yyin);
     }
+    // Al finalizar, generar tabla
+    volcarTabla();
     return 0;
 }
 

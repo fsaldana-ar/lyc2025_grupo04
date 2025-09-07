@@ -5,7 +5,6 @@
 
 #include "y.tab.h"
 FILE  *yyin;
-int yylval;
 char *yyltext;
 
 int yyerror(void);
