@@ -5,7 +5,7 @@
 #include "y.tab.h"
 
 int yystopparser = 0;
-FILE *yyin;
+extern FILE *yyin;
 
 int yyerror();
 int yylex();
@@ -44,8 +44,11 @@ void agregarVariable(const char* nombre, const char* tipo) {
     if (existeSimbolo(nombre, tipo)) return;
     strcpy(tabla[indiceTabla].nombre, nombre);
     strcpy(tabla[indiceTabla].tipo, tipo);
-    strcpy(tabla[indiceTabla].valor, "—");
+    strcpy(tabla[indiceTabla].valor, "");
+    /* Aca adaptamos con la longitud de toda la variable 
     tabla[indiceTabla].longitud = strlen(nombre);
+    */
+    tabla[indiceTabla].longitud = 0;
     indiceTabla++;
 }
 
@@ -63,6 +66,7 @@ void agregarConstante(const char* valor, const char* tipo) {
     indiceTabla++;
 }
 
+/*
 void volcarTabla() {
     FILE *f = fopen("symbol-table.txt", "w");
     if (!f) {
@@ -74,15 +78,71 @@ void volcarTabla() {
     fprintf(f, "               TABLA DE SÍMBOLOS - LYC 2025          \n");
     fprintf(f, "=====================================================\n\n");
 
-    fprintf(f, "%-15s %-10s %-20s %-10s\n", "NOMBRE", "TIPO", "VALOR", "LONGITUD");
+    fprintf(f, "%-50s %-10s %-50s %-10s\n", "NOMBRE", "TIPO", "VALOR", "LONGITUD");
     fprintf(f, "-----------------------------------------------------\n");
 
     for (int i = 0; i < indiceTabla; i++) {
+        /* Acá arma la tabla mostrando todo
+        
         fprintf(f, "%-15s %-10s %-20s %-10d\n",
                 tabla[i].nombre,
                 tabla[i].tipo,
                 tabla[i].valor,
                 tabla[i].longitud);
+        }
+    }
+
+    fprintf(f, "\nTotal de entradas: %d\n", indiceTabla);
+    fclose(f);
+    printf("\n>> symbol-table.txt generado correctamente\n");
+}*/
+void volcarTabla() {
+    FILE *f = fopen("symbol-table.txt", "w");
+    if (!f) {
+        printf("No se pudo abrir symbol-table.txt para escritura\n");
+        return;
+    }
+
+    const int ANCHO_NOMBRE = 50;
+    const int ANCHO_TIPO   = 10;
+    const int ANCHO_VALOR  = 50;
+    const int ANCHO_LONG   = 10;
+
+    int ancho_total = ANCHO_NOMBRE + ANCHO_TIPO + ANCHO_VALOR + ANCHO_LONG + 3; 
+    // +3 por los espacios entre columnas
+
+    // Encabezado
+    for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
+    fprintf(f, "\n");
+    fprintf(f, "%*s\n", (ancho_total + 30) / 2, "TABLA DE SÍMBOLOS - LYC 2025");
+    for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
+    fprintf(f, "\n\n");
+
+    // Títulos
+    fprintf(f, "%-*s %-*s %-*s %-*s\n",
+            ANCHO_NOMBRE, "NOMBRE",
+            ANCHO_TIPO,   "TIPO",
+            ANCHO_VALOR,  "VALOR",
+            ANCHO_LONG,   "LONGITUD");
+
+    for (int i = 0; i < ancho_total; i++) fprintf(f, "-");
+    fprintf(f, "\n");
+
+    // Contenido
+    for (int i = 0; i < indiceTabla; i++) {
+        if (strcmp(tabla[i].tipo, "String") == 0) {
+            fprintf(f, "%-*s %-*s %-*s %*d\n",
+                    ANCHO_NOMBRE, tabla[i].nombre,
+                    ANCHO_TIPO,   "",
+                    ANCHO_VALOR,  tabla[i].valor,
+                    ANCHO_LONG,   tabla[i].longitud);
+        } else {
+            fprintf(f, "%-*s %-*s %-*s %*d\n",
+                    ANCHO_NOMBRE, tabla[i].nombre,
+                    ANCHO_TIPO,   "",
+                    ANCHO_VALOR,  tabla[i].valor,
+                    ANCHO_LONG,   0);
+        }
     }
 
     fprintf(f, "\nTotal de entradas: %d\n", indiceTabla);

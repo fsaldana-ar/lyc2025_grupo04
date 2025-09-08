@@ -1,0 +1,41 @@
+===========================================================================================================================
+                                               TABLA DE SÍMBOLOS - LYC 2025
+===========================================================================================================================
+
+NOMBRE                                             TIPO       VALOR                                              LONGITUD  
+---------------------------------------------------------------------------------------------------------------------------
+a                                                                                                                         0
+b                                                                                                                         0
+c                                                                                                                         0
+d                                                                                                                         0
+nombre                                                                                                                    0
+apellido                                                                                                                  0
+const_Int_6                                                   5                                                           0
+const_Int_7                                                   3                                                           0
+const_Float_8                                                 99.5                                                        0
+const_Float_9                                                 2.0                                                         0
+const_Int_10                                                  10                                                          0
+const_Int_11                                                  3                                                           0
+const_String_12                                               El valor de a es:                                          17
+const_String_13                                               a es mayor que b                                           16
+const_String_14                                               a es menor que b                                           16
+const_String_15                                               a es mayor o igual que b                                   24
+const_Int_16                                                  10                                                          0
+const_String_17                                               Incrementando a                                            15
+const_Int_18                                                  1                                                           0
+const_Int_19                                                  5                                                           0
+const_Int_20                                                  1                                                           0
+const_String_21                                               Ciclo anidado                                              13
+const_String_22                                               Condición AND verdadera                                   24
+const_String_23                                               Condición OR verdadera                                    23
+const_String_24                                               Condición NOT verdadera                                   24
+const_Int_25                                                  10                                                          0
+const_String_26                                               a es igual a 10                                            15
+const_Int_27                                                  21                                                          0
+const_Int_28                                                  08                                                          0
+const_Int_29                                                  2025                                                        0
+fecha_30                                                                                                                  0
+fecha                                                                                                                     0
+const_String_32                                               Fecha convertida:                                          17
+
+Total de entradas: 33

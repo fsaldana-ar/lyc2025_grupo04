@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "y.tab.h"
-FILE  *yyin;
+extern FILE  *yyin;
 char *yyltext;
 
 int yyerror(void);
