@@ -51,13 +51,23 @@ void agregarVariable(const char* nombre, const char* tipo) {
     tabla[indiceTabla].longitud = 0;
     indiceTabla++;
 }
+// Verifica si existe una constante con el mismo valor y tipo
+int existeConstante(const char* valor, const char* tipo) {
+    for (int i = 0; i < indiceTabla; i++) {
+        if (strcmp(tabla[i].tipo, tipo) == 0 &&
+            strcmp(tabla[i].valor, valor) == 0) {
+            return 1; // constante duplicada
+        }
+    }
+    return 0;
+}
 
 void agregarConstante(const char* valor, const char* tipo) {
+    // Verificar si ya existe constante con mismo valor y tipo
+    if (existeConstante(valor, tipo)) return;
     // Crear nombre único para constantes
     char nombreUnico[50];
     sprintf(nombreUnico, "const_%s_%d", tipo, indiceTabla);
-    
-    if (existeSimbolo(nombreUnico, tipo)) return;
     
     strcpy(tabla[indiceTabla].nombre, nombreUnico);
     strcpy(tabla[indiceTabla].tipo, tipo);
