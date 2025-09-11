@@ -194,12 +194,12 @@ void volcarTabla() {
    ============================ */
 
 programa:
-    lista_sentencias
+    lista_sentencias  { printf("Programa -> Lista_sentencias \n"); }
 ;
 
 lista_sentencias:
-    sentencia
-  | lista_sentencias sentencia
+    sentencia  { printf("Lista_Sentencias -> Sentencia \n"); }
+  | lista_sentencias sentencia  { printf("Lista_Sentencias -> Lista_Sentencias Sentencia \n"); }
 ;
 
 sentencia:
@@ -207,12 +207,13 @@ sentencia:
   | seleccion   { printf("Sentencia -> Seleccion\n"); }
   | iteracion   { printf("Sentencia -> Iteracion\n"); }
   | declaracion { printf("Sentencia -> Declaracion\n"); }
-  | io
+  | io { printf("Sentencia -> Io\n"); }
 ;
 
 /* Asignaciones */
 asignacion:
-    ID ASIG expresion PYC {
+    ID ASIG expresion PYC   { printf("Asignacion -> ID := Expresion ;\n"); }
+   {
         // Verificar si la variable fue declarada
         if (!existeSimbolo($1, "Int") && !existeSimbolo($1, "Float") && 
             !existeSimbolo($1, "String") && !existeSimbolo($1, "Date")) {
@@ -239,8 +240,8 @@ termino:
 ;
 
 factor:
-    ID
-  | CTE_INT   { agregarConstante($1, "Int"); }
+    ID   { printf("Factor -> Id\n"); }
+  | CTE_INT   { agregarConstante($1, "Int"); } 
   | CTE_FLOAT { agregarConstante($1, "Float"); }
   | CTE_STR   { agregarConstante($1, "String"); }
   | PAR_IZQ expresion PAR_DER
@@ -255,46 +256,46 @@ factor:
 
 /* Condiciones */
 condicion:
-    comparacion
-  | ISZERO PAR_IZQ expresion PAR_DER 
-  | condicion AND comparacion
-  | condicion OR comparacion
-  | NOT condicion
+    comparacion { printf("Condicion -> Comparacion\n"); }
+  | ISZERO PAR_IZQ expresion PAR_DER { printf("Condicion -> ISZERO ( Expresion )\n"); }
+  | condicion AND comparacion { printf("Condicion -> Condicion AND Comparacion\n"); }
+  | condicion OR comparacion { printf("Condicion -> Condicion OR Comparacion \n"); }
+  | NOT condicion { printf("Condicion -> NOT condicion)\n"); }
 ;
 
 comparacion:
-    expresion MENOR expresion
-  | expresion MAYOR expresion
-  | expresion MENOR_IG expresion
-  | expresion MAYOR_IG expresion
-  | expresion IGUAL expresion
-  | expresion DIST expresion
+    expresion MENOR expresion { printf("Comparacion -> Expresion < Expresion \n"); }
+  | expresion MAYOR expresion { printf("Comparacion -> Expresion > Expresion \n"); }
+  | expresion MENOR_IG expresion { printf("Comparacion -> Expresion <= Expresion \n"); }
+  | expresion MAYOR_IG expresion { printf("Comparacion -> Expresion >= Expresion \n"); }
+  | expresion IGUAL expresion { printf("Comparacion -> Expresion = Expresion \n"); }
+  | expresion DIST expresion { printf("Comparacion -> expresion != expresion \n"); }
 ;
 
 /* If / If-Else */
 seleccion:
-    IF PAR_IZQ condicion PAR_DER bloque
-  | IF PAR_IZQ condicion PAR_DER bloque ELSE bloque
+    IF PAR_IZQ condicion PAR_DER bloque { printf("Seleccion -> IF ( Condicion ) bloque \n"); }
+  | IF PAR_IZQ condicion PAR_DER bloque ELSE bloque { printf("Seleccion -> IF ( Condicion ) bloque \n"); }
 ;
 
 /* While */
 iteracion:
-    WHILE PAR_IZQ condicion PAR_DER bloque
+    WHILE PAR_IZQ condicion PAR_DER bloque { printf("Iteracion -> WHILE ( Condicion ) bloque \n"); }
 ;
 
 /* Bloques de código */
 bloque:
-    LLA_IZQ lista_sentencias LLA_DER
+    LLA_IZQ lista_sentencias LLA_DER { printf("Bloque -> { Lista_Sentencias } \n"); }
 ;
 
 /* Declaraciones de variables */
 declaracion:
-    INIT LLA_IZQ lista_declaraciones LLA_DER
+    INIT LLA_IZQ lista_declaraciones LLA_DER { printf("Declaracion -> INIT { Lista_Declaraciones } \n"); }
 ;
 
 lista_declaraciones:
-    declaracion_tipo
-  | lista_declaraciones declaracion_tipo
+    declaracion_tipo { printf("Lista_Declaraciones -> Tipo \n"); }
+  | lista_declaraciones declaracion_tipo { printf("Lista_Declaraciones -> Lista_declaraciones Tipo \n"); }
 ;
 
 declaracion_tipo:
@@ -320,8 +321,8 @@ tipo:
 
 /* Entrada/Salida */
 io:
-    READ PAR_IZQ ID PAR_DER PYC
-  | WRITE PAR_IZQ expresion PAR_DER PYC
+    READ PAR_IZQ ID PAR_DER PYC  { printf("IO -> READ (ID) ; \n"); }
+  | WRITE PAR_IZQ expresion PAR_DER PYC { printf("IO -> WRITE ( ID ); \n"); }
 ;
 
 %%
@@ -345,3 +346,4 @@ int yyerror(void) {
     printf("Error Sintactico\n");
     exit(1);
 }
+
