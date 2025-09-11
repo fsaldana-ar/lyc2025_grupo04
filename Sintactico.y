@@ -203,10 +203,10 @@ lista_sentencias:
 ;
 
 sentencia:
-    asignacion
-  | seleccion
-  | iteracion
-  | declaracion
+    asignacion  { printf("Sentencia -> Asignacion\n"); }
+  | seleccion   { printf("Sentencia -> Seleccion\n"); }
+  | iteracion   { printf("Sentencia -> Iteracion\n"); }
+  | declaracion { printf("Sentencia -> Declaracion\n"); }
   | io
 ;
 
@@ -220,22 +220,22 @@ asignacion:
             // Opcional: agregarla automáticamente con tipo inferido
             agregarVariable($1, "Int"); // Asumimos Int por defecto
         }
-        printf("Regla: Asignacion -> ID := Expresion;\n"); 
+        printf("Asignacion -> ID := Expresion;\n"); 
     }
 ;
 
 /* Expresiones aritméticas */
 expresion:
-    termino
-  | expresion SUMA termino
-  | expresion RESTA termino
+    termino                  { printf("Expresion -> Termino\n"); }
+  | expresion SUMA termino  { printf("Expresion -> Expresion + Termino\n"); }
+  | expresion RESTA termino { printf("Expresion -> Expresion - Termino\n"); }
 ;
 
 termino:
     factor
-  | termino MULT factor
-  | termino DIV factor
-  | termino MOD factor   { printf("Regla: Termino -> Termino %% Factor\n"); }
+  | termino MULT factor  { printf("Termino -> Termino * Factor\n"); }
+  | termino DIV factor   { printf("Termino -> Termino %/ Factor\n"); }
+  | termino MOD factor   { printf("Termino -> Termino %% Factor\n"); }
 ;
 
 factor:
@@ -256,7 +256,7 @@ factor:
 /* Condiciones */
 condicion:
     comparacion
-  | ISZERO PAR_IZQ expresion PAR_DER
+  | ISZERO PAR_IZQ expresion PAR_DER 
   | condicion AND comparacion
   | condicion OR comparacion
   | NOT condicion
