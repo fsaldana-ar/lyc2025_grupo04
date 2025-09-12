@@ -15,9 +15,9 @@ int yylex();
    ============================ */
 typedef struct {
     char nombre[50];   // nombre de la variable o constante
-    char tipo[10];     // Int, Float, String
+    char tipo[10];     // siempre "-"
     char valor[50];    // valor (solo para constantes)
-    int longitud;      // longitud del nombre o del string
+    int longitud;      // longitud del string si aplica
 } Simbolo;
 
 Simbolo tabla[500];
@@ -30,32 +30,28 @@ int cantIdsPendientes = 0;
 /* ============================
    Funciones auxiliares
    ============================ */
-int existeSimbolo(const char* nombre, const char* tipo) {
+int existeSimbolo(const char* nombre) {
     for (int i = 0; i < indiceTabla; i++) {
-        if (strcmp(tabla[i].nombre, nombre) == 0 &&
-            strcmp(tabla[i].tipo, tipo) == 0) {
+        if (strcmp(tabla[i].nombre, nombre) == 0) {
             return 1; // ya existe
         }
     }
     return 0;
 }
 
-void agregarVariable(const char* nombre, const char* tipo) {
-    if (existeSimbolo(nombre, tipo)) return;
+void agregarVariable(const char* nombre) {
+    if (existeSimbolo(nombre)) return;
     strcpy(tabla[indiceTabla].nombre, nombre);
-    strcpy(tabla[indiceTabla].tipo, tipo);
+    strcpy(tabla[indiceTabla].tipo, "-");  
     strcpy(tabla[indiceTabla].valor, "");
-    /* Aca adaptamos con la longitud de toda la variable 
-    tabla[indiceTabla].longitud = strlen(nombre);
-    */
     tabla[indiceTabla].longitud = 0;
     indiceTabla++;
 }
-// Verifica si existe una constante con el mismo valor y tipo
-int existeConstante(const char* valor, const char* tipo) {
+
+// Verifica si existe una constante con el mismo valor
+int existeConstante(const char* valor) {
     for (int i = 0; i < indiceTabla; i++) {
-        if (strcmp(tabla[i].tipo, tipo) == 0 &&
-            strcmp(tabla[i].valor, valor) == 0) {
+        if (strcmp(tabla[i].valor, valor) == 0) {
             return 1; // constante duplicada
         }
     }
@@ -63,49 +59,36 @@ int existeConstante(const char* valor, const char* tipo) {
 }
 
 void agregarConstante(const char* valor, const char* tipo) {
-    // Verificar si ya existe constante con mismo valor y tipo
-    if (existeConstante(valor, tipo)) return;
-    // Crear nombre único para constantes
+    if (existeConstante(valor)) return;
+
     char nombreUnico[50];
-    sprintf(nombreUnico, "const_%s_%d", tipo, indiceTabla);
-    
+
+    if (strcmp(tipo, "Int") == 0 || strcmp(tipo, "Float") == 0) {
+       
+        sprintf(nombreUnico, "_%s", valor);
+    } 
+    else if (strcmp(tipo, "String") == 0) {
+       
+        static int contadorString = 1;
+        sprintf(nombreUnico, "const_string_%d", contadorString++);
+    } 
+    else {
+        
+        sprintf(nombreUnico, "const_%d", indiceTabla);
+    }
+
     strcpy(tabla[indiceTabla].nombre, nombreUnico);
-    strcpy(tabla[indiceTabla].tipo, tipo);
+    strcpy(tabla[indiceTabla].tipo, "-");
     strcpy(tabla[indiceTabla].valor, valor);
-    tabla[indiceTabla].longitud = strlen(valor);
+
+    if (strcmp(tipo, "String") == 0)
+        tabla[indiceTabla].longitud = strlen(valor);
+    else
+        tabla[indiceTabla].longitud = 0;
+
     indiceTabla++;
 }
 
-/*
-void volcarTabla() {
-    FILE *f = fopen("symbol-table.txt", "w");
-    if (!f) {
-        printf("No se pudo abrir symbol-table.txt para escritura\n");
-        return;
-    }
-
-    fprintf(f, "=====================================================\n");
-    fprintf(f, "               TABLA DE SÍMBOLOS - LYC 2025          \n");
-    fprintf(f, "=====================================================\n\n");
-
-    fprintf(f, "%-50s %-10s %-50s %-10s\n", "NOMBRE", "TIPO", "VALOR", "LONGITUD");
-    fprintf(f, "-----------------------------------------------------\n");
-
-    for (int i = 0; i < indiceTabla; i++) {
-        /* Acá arma la tabla mostrando todo
-        
-        fprintf(f, "%-15s %-10s %-20s %-10d\n",
-                tabla[i].nombre,
-                tabla[i].tipo,
-                tabla[i].valor,
-                tabla[i].longitud);
-        }
-    }
-
-    fprintf(f, "\nTotal de entradas: %d\n", indiceTabla);
-    fclose(f);
-    printf("\n>> symbol-table.txt generado correctamente\n");
-}*/
 void volcarTabla() {
     FILE *f = fopen("symbol-table.txt", "w");
     if (!f) {
@@ -120,14 +103,12 @@ void volcarTabla() {
 
     int ancho_total = ANCHO_NOMBRE + ANCHO_TIPO + ANCHO_VALOR + ANCHO_LONG + 3; 
 
-    // Encabezado
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
     fprintf(f, "\n");
     fprintf(f, "%*s\n", (ancho_total + 30) / 2, "TABLA DE SÍMBOLOS - LYC 2025");
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
     fprintf(f, "\n\n");
 
-    // Títulos
     fprintf(f, "%-*s %-*s %-*s %-*s\n",
             ANCHO_NOMBRE, "NOMBRE",
             ANCHO_TIPO,   "TIPO",
@@ -137,21 +118,16 @@ void volcarTabla() {
     for (int i = 0; i < ancho_total; i++) fprintf(f, "-");
     fprintf(f, "\n");
 
-    // Contenido
     for (int i = 0; i < indiceTabla; i++) {
         char longitudStr[20];
-
-        if (strcmp(tabla[i].tipo, "String") == 0 && strlen(tabla[i].valor) > 0) {
-            // Constante String -> mostrar longitud
+        if (tabla[i].longitud > 0)
             sprintf(longitudStr, "%d", tabla[i].longitud);
-        } else {
-            // Variables String o cualquier otro tipo -> "-"
+        else
             strcpy(longitudStr, "-");
-        }
 
         fprintf(f, "%-*s %-*s %-*s %-*s\n",
                 ANCHO_NOMBRE, tabla[i].nombre,
-                ANCHO_TIPO,   tabla[i].tipo,
+                ANCHO_TIPO,   "-",             
                 ANCHO_VALOR,  tabla[i].valor,
                 ANCHO_LONG,   longitudStr);
     }
@@ -195,117 +171,121 @@ void volcarTabla() {
    ============================ */
 
 programa:
-    lista_sentencias  { printf("Programa -> Lista_sentencias \n"); }
+    lista_sentencias  { printf(" FIN\n"); }
 ;
 
 lista_sentencias:
-    sentencia  { printf("Lista_Sentencias -> Sentencia \n"); }
-  | lista_sentencias sentencia  { printf("Lista_Sentencias -> Lista_Sentencias Sentencia \n"); }
+    sentencia  
+  | lista_sentencias sentencia  
 ;
 
 sentencia:
-    asignacion  { printf("Sentencia -> Asignacion\n"); }
-  | seleccion   { printf("Sentencia -> Seleccion\n"); }
-  | iteracion   { printf("Sentencia -> Iteracion\n"); }
-  | declaracion { printf("Sentencia -> Declaracion\n"); }
-  | io { printf("Sentencia -> Io\n"); }
+    asignacion  
+  | seleccion   
+  | iteracion   
+  | declaracion 
+  | io 
 ;
 
 /* Asignaciones */
 asignacion:
-    ID ASIG expresion PYC   { printf("Asignacion -> ID := Expresion ;\n"); }
-   {
-        // Verificar si la variable fue declarada
-        if (!existeSimbolo($1, "Int") && !existeSimbolo($1, "Float") && 
-            !existeSimbolo($1, "String") && !existeSimbolo($1, "Date")) {
+    ID ASIG expresion PYC   { 
+        if (!existeSimbolo($1)) {
             printf("ADVERTENCIA: Variable '%s' no declarada con INIT\n", $1);
-            // Opcional: agregarla automáticamente con tipo inferido
-            agregarVariable($1, "Int"); // Asumimos Int por defecto
+            agregarVariable($1);
         }
-        printf("Asignacion -> ID := Expresion;\n"); 
+        printf("    ID := Expresion es ASIGNACION\n"); 
     }
 ;
 
 /* Expresiones aritméticas */
 expresion:
-    termino                  { printf("Expresion -> Termino\n"); }
-  | expresion SUMA termino  { printf("Expresion -> Expresion + Termino\n"); }
-  | expresion RESTA termino { printf("Expresion -> Expresion - Termino\n"); }
+    termino                  { printf("    Termino es Expresion\n"); }
+  | expresion SUMA termino  { printf("    Expresion+Termino es Expresion\n"); }
+  | expresion RESTA termino { printf("    Expresion-Termino es Expresion\n"); }
 ;
 
 termino:
-    factor
-  | termino MULT factor  { printf("Termino -> Termino * Factor\n"); }
-  | termino DIV factor   { printf("Termino -> Termino %/ Factor\n"); }
-  | termino MOD factor   { printf("Termino -> Termino %% Factor\n"); }
+    factor                 { printf("    Factor es Termino\n"); }
+  | termino MULT factor  { printf("     Termino*Factor es Termino\n"); }
+  | termino DIV factor   { printf("     Termino/Factor es Termino\n"); }
+  | termino MOD factor   { printf("     Termino%%Factor es Termino\n"); }
 ;
 
 factor:
-    ID   { printf("Factor -> Id\n"); }
-  | CTE_INT   { agregarConstante($1, "Int"); } 
-  | CTE_FLOAT { agregarConstante($1, "Float"); }
-  | CTE_STR   { agregarConstante($1, "String"); }
-  | PAR_IZQ expresion PAR_DER
+    ID   { printf("    ID es Factor\n"); }
+  | CTE_INT   { 
+        agregarConstante($1, "Int"); 
+        printf("    CTE es Factor\n"); 
+    } 
+  | CTE_FLOAT { 
+        agregarConstante($1, "Float"); 
+        printf("    CTE es Factor\n"); 
+    }
+  | CTE_STR   { 
+        agregarConstante($1, "String"); 
+        printf("    CTE es Factor\n"); 
+    }
+  | PAR_IZQ expresion PAR_DER { printf("    Expresion entre parentesis es Factor\n"); }
   | CONVDATE PAR_IZQ expresion RESTA expresion RESTA expresion PAR_DER {
-        // Crear un nombre único para la fecha convertida
         char fechaStr[20];
         sprintf(fechaStr, "fecha_%d", indiceTabla);
-        agregarVariable(fechaStr, "Date");
-        printf("Regla: ConvDate procesada\n");
+        agregarVariable(fechaStr);
+        printf("    convDate(Expresion-Expresion-Expresion) es Factor\n");
     }
 ;
 
 /* Condiciones */
 condicion:
-    comparacion { printf("Condicion -> Comparacion\n"); }
-  | ISZERO PAR_IZQ expresion PAR_DER { printf("Condicion -> ISZERO ( Expresion )\n"); }
-  | condicion AND comparacion { printf("Condicion -> Condicion AND Comparacion\n"); }
-  | condicion OR comparacion { printf("Condicion -> Condicion OR Comparacion \n"); }
-  | NOT condicion { printf("Condicion -> NOT condicion)\n"); }
+    comparacion 
+  | ISZERO PAR_IZQ expresion PAR_DER { printf("    ISZERO(Expresion) es Condicion\n"); }
+  | condicion AND comparacion { printf("    Condicion AND Comparacion es Condicion\n"); }
+  | condicion OR comparacion { printf("    Condicion OR Comparacion es Condicion\n"); }
+  | NOT condicion { printf("    NOT Condicion es Condicion\n"); }
 ;
 
 comparacion:
-    expresion MENOR expresion { printf("Comparacion -> Expresion < Expresion \n"); }
-  | expresion MAYOR expresion { printf("Comparacion -> Expresion > Expresion \n"); }
-  | expresion MENOR_IG expresion { printf("Comparacion -> Expresion <= Expresion \n"); }
-  | expresion MAYOR_IG expresion { printf("Comparacion -> Expresion >= Expresion \n"); }
-  | expresion IGUAL expresion { printf("Comparacion -> Expresion = Expresion \n"); }
-  | expresion DIST expresion { printf("Comparacion -> expresion != expresion \n"); }
+    expresion MENOR expresion { printf("    Expresion<Expresion es Comparacion\n"); }
+  | expresion MAYOR expresion { printf("    Expresion>Expresion es Comparacion\n"); }
+  | expresion MENOR_IG expresion { printf("    Expresion<=Expresion es Comparacion\n"); }
+  | expresion MAYOR_IG expresion { printf("    Expresion>=Expresion es Comparacion\n"); }
+  | expresion IGUAL expresion { printf("    Expresion==Expresion es Comparacion\n"); }
+  | expresion DIST expresion { printf("    Expresion!=Expresion es Comparacion\n"); }
 ;
 
 /* If / If-Else */
 seleccion:
-    IF PAR_IZQ condicion PAR_DER bloque { printf("Seleccion -> IF ( Condicion ) bloque \n"); }
-  | IF PAR_IZQ condicion PAR_DER bloque ELSE bloque { printf("Seleccion -> IF ( Condicion ) bloque \n"); }
+    IF PAR_IZQ condicion PAR_DER bloque { printf("    IF(Condicion)Bloque es Seleccion\n"); }
+  | IF PAR_IZQ condicion PAR_DER bloque ELSE bloque { printf("    IF(Condicion)Bloque ELSE Bloque es Seleccion\n"); }
 ;
 
 /* While */
 iteracion:
-    WHILE PAR_IZQ condicion PAR_DER bloque { printf("Iteracion -> WHILE ( Condicion ) bloque \n"); }
+    WHILE PAR_IZQ condicion PAR_DER bloque { printf("    WHILE(Condicion)Bloque es Iteracion\n"); }
 ;
 
 /* Bloques de código */
 bloque:
-    LLA_IZQ lista_sentencias LLA_DER { printf("Bloque -> { Lista_Sentencias } \n"); }
+    LLA_IZQ lista_sentencias LLA_DER { printf("    {Lista_sentencias} es Bloque\n"); }
 ;
 
 /* Declaraciones de variables */
 declaracion:
-    INIT LLA_IZQ lista_declaraciones LLA_DER { printf("Declaracion -> INIT { Lista_Declaraciones } \n"); }
+    INIT LLA_IZQ lista_declaraciones LLA_DER { printf("    INIT{Lista_declaraciones} es Declaracion\n"); }
 ;
 
 lista_declaraciones:
-    declaracion_tipo { printf("Lista_Declaraciones -> Tipo \n"); }
-  | lista_declaraciones declaracion_tipo { printf("Lista_Declaraciones -> Lista_declaraciones Tipo \n"); }
+    declaracion_tipo 
+  | lista_declaraciones declaracion_tipo 
 ;
 
 declaracion_tipo:
     lista_ids DOS_PUNTOS tipo PYC {
         for (int i = 0; i < cantIdsPendientes; i++) {
-            agregarVariable(idsPendientes[i], $3);
+            agregarVariable(idsPendientes[i]);
         }
-        cantIdsPendientes = 0; // limpiar lista
-        printf("Regla: Declaracion -> lista_ids : tipo;\n");
+        cantIdsPendientes = 0;
+        printf("    Lista_ids:Tipo; es Declaracion_tipo\n");
     }
 ;
 
@@ -322,8 +302,8 @@ tipo:
 
 /* Entrada/Salida */
 io:
-    READ PAR_IZQ ID PAR_DER PYC  { printf("IO -> READ (ID) ; \n"); }
-  | WRITE PAR_IZQ expresion PAR_DER PYC { printf("IO -> WRITE ( ID ); \n"); }
+    READ PAR_IZQ ID PAR_DER PYC  { printf("    READ(ID) es IO\n"); }
+  | WRITE PAR_IZQ expresion PAR_DER PYC { printf("    WRITE(Expresion) es IO\n"); }
 ;
 
 %%
@@ -338,7 +318,6 @@ int main(int argc, char *argv[]) {
         yyparse();
         fclose(yyin);
     }
-    // Al finalizar, generar tabla
     volcarTabla();
     return 0;
 }
@@ -347,5 +326,3 @@ int yyerror(void) {
     printf("Error Sintactico\n");
     exit(1);
 }
-
-
