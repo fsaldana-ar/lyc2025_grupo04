@@ -119,7 +119,6 @@ void volcarTabla() {
     const int ANCHO_LONG   = 10;
 
     int ancho_total = ANCHO_NOMBRE + ANCHO_TIPO + ANCHO_VALOR + ANCHO_LONG + 3; 
-    // +3 por los espacios entre columnas
 
     // Encabezado
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
@@ -140,19 +139,21 @@ void volcarTabla() {
 
     // Contenido
     for (int i = 0; i < indiceTabla; i++) {
-        if (strcmp(tabla[i].tipo, "String") == 0) {
-            fprintf(f, "%-*s %-*s %-*s %*d\n",
-                    ANCHO_NOMBRE, tabla[i].nombre,
-                    ANCHO_TIPO,   "",
-                    ANCHO_VALOR,  tabla[i].valor,
-                    ANCHO_LONG,   tabla[i].longitud);
+        char longitudStr[20];
+
+        if (strcmp(tabla[i].tipo, "String") == 0 && strlen(tabla[i].valor) > 0) {
+            // Constante String -> mostrar longitud
+            sprintf(longitudStr, "%d", tabla[i].longitud);
         } else {
-            fprintf(f, "%-*s %-*s %-*s %*d\n",
-                    ANCHO_NOMBRE, tabla[i].nombre,
-                    ANCHO_TIPO,   "",
-                    ANCHO_VALOR,  tabla[i].valor,
-                    ANCHO_LONG,   0);
+            // Variables String o cualquier otro tipo -> "-"
+            strcpy(longitudStr, "-");
         }
+
+        fprintf(f, "%-*s %-*s %-*s %-*s\n",
+                ANCHO_NOMBRE, tabla[i].nombre,
+                ANCHO_TIPO,   tabla[i].tipo,
+                ANCHO_VALOR,  tabla[i].valor,
+                ANCHO_LONG,   longitudStr);
     }
 
     fprintf(f, "\nTotal de entradas: %d\n", indiceTabla);
@@ -346,4 +347,5 @@ int yyerror(void) {
     printf("Error Sintactico\n");
     exit(1);
 }
+
 
