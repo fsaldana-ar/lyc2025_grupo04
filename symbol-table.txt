@@ -1,0 +1,36 @@
+===========================================================================================================================
+                                               TABLA DE SÍMBOLOS - LYC 2025
+===========================================================================================================================
+
+NOMBRE                                             TIPO       VALOR                                              LONGITUD  
+---------------------------------------------------------------------------------------------------------------------------
+a                                                  -                                                             -         
+b                                                  -                                                             -         
+c                                                  -                                                             -         
+d                                                  -                                                             -         
+nombre                                             -                                                             -         
+apellido                                           -                                                             -         
+_5                                                 -          5                                                  -         
+_3                                                 -          3                                                  -         
+_99.5                                              -          99.5                                               -         
+_2.0                                               -          2.0                                                -         
+_10                                                -          10                                                 -         
+const_string_1                                     -          El valor de a es:                                  17        
+const_string_2                                     -          a es mayor que b                                   16        
+const_string_3                                     -          a es menor que b                                   16        
+const_string_4                                     -          a es mayor o igual que b                           24        
+const_string_5                                     -          Incrementando a                                    15        
+_1                                                 -          1                                                  -         
+const_string_6                                     -          Ciclo anidado                                      13        
+const_string_7                                     -          Condición AND verdadera                           24        
+const_string_8                                     -          Condición OR verdadera                            23        
+const_string_9                                     -          Condición NOT verdadera                           24        
+const_string_10                                    -          a es igual a 10                                    15        
+_21                                                -          21                                                 -         
+_08                                                -          08                                                 -         
+_2025                                              -          2025                                               -         
+fecha_25                                           -                                                             -         
+fecha                                              -                                                             -         
+const_string_11                                    -          Fecha convertida:                                  17        
+
+Total de entradas: 28

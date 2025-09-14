@@ -1,0 +1,2 @@
+comando 1: cd "directorio del archivo"
+comando 2: lyc-compiler-1.0.0.exe test.txt
