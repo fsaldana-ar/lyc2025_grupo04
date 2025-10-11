@@ -1,0 +1,109 @@
+==============================
+CÓDIGO INTERMEDIO - POLACA INVERSA
+==============================
+
+5 a :=
+
+a 3 + b :=
+
+99.5 c :=
+
+c 2.0 / a b * - d :=
+
+10 3 %% a :=
+
+a READ
+
+"El valor de a es:" WRITE
+
+a WRITE
+
+a b >
+
+BF ET1
+
+"a es mayor que b" WRITE
+
+ET1
+
+a b <
+
+BF ET2
+
+"a es menor que b" WRITE
+
+BI ET3
+
+ET2
+
+"a es mayor o igual que b" WRITE
+
+ET3
+
+ET4
+
+a 10 <
+
+BF ET5
+
+"Incrementando a" WRITE
+
+a 1 + a :=
+
+ET6
+
+b 5 <
+
+BF ET7
+
+b 1 + b :=
+
+"Ciclo anidado" WRITE
+
+BI ET6
+
+ET7
+
+BI ET4
+
+ET5
+
+a b < c d > AND
+
+BF ET8
+
+"Condición AND verdadera" WRITE
+
+ET8
+
+a b < c d > OR
+
+BF ET9
+
+"Condición OR verdadera" WRITE
+
+ET9
+
+a b > NOT
+
+BF ET10
+
+"Condición NOT verdadera" WRITE
+
+ET10
+
+a 10 - 0 ==
+
+BF ET11
+
+"a es igual a 10" WRITE
+
+ET11
+
+21 08 2025 CONVDATE fecha :=
+
+"Fecha convertida:" WRITE
+
+fecha WRITE
+
+Total de elementos: 137

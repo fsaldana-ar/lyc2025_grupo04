@@ -2,146 +2,127 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "y.tab.h"
-extern FILE  *yyin;
-char *yyltext;
-
+extern FILE *yyin;
 int yyerror(void);
 
+/* Contexto para convDate: dentro de sus paréntesis tratamos '-' como separador */
+static int inConvDate = 0;
+static int convDepth = 0;
 %}
 
-%option noyywrap  
-%option yylineno 
-
+%option noyywrap
+%option yylineno
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-
 CTE_INT     {DIGITO}+
 CTE_FLOAT   ({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
 ID          {LETRA}({LETRA}|{DIGITO})*
 
 %%
 
+"if"            { return IF; }
+"else"          { return ELSE; }
+"while"         { return WHILE; }
+"init"          { return INIT; }
+"read"          { return READ; }
+"write"         { return WRITE; }
+"Int"           { return INT; }
+"Float"         { return FLOAT; }
+"String"        { return STRING; }
+"isZero"        { return ISZERO; }
+"convDate"      { inConvDate = 1; convDepth = 0; return CONVDATE; }
+"AND"           { return AND; }
+"OR"            { return OR; }
+"NOT"           { return NOT; }
+"and"           { return AND; }
+"or"            { return OR; }
+"not"           { return NOT; }
 
-"if"            { printf("\nIf: %s\n", yytext); return IF; }
-"else"          { printf("\nElse: %s\n", yytext); return ELSE; }
-"while"         { printf("\nWhile: %s\n", yytext); return WHILE; }
-"for"           { printf("\nFor: %s\n", yytext); return FOR; }
-"return"        { printf("\nReturn: %s\n", yytext); return RETURN; }
+":="|"=:"       { return ASIG; }
 
-"init"          { printf("\nInit: %s\n", yytext); return INIT; }
-"read"          { printf("\nRead: %s\n", yytext); return READ; }
-"write"         { printf("\nWrite: %s\n", yytext); return WRITE; }
+"=="            { return IGUAL; }
+"!="            { return DIST; }
+"<="            { return MENOR_IG; }
+">="            { return MAYOR_IG; }
+"<"             { return MENOR; }
+">"             { return MAYOR; }
 
-"Int"           { printf("\nInt: %s\n", yytext); return INT; }
-"Float"         { printf("\nFloat: %s\n", yytext); return FLOAT; }
-"String"        { printf("\nString: %s\n", yytext); return STRING; }
+"+"             { return SUMA; }
+"-"             { return inConvDate ? GUION : RESTA; }
+"*"             { return MULT; }
+"/"             { return DIV; }
+"%"             { return MOD; }
 
-"AND"           { printf("\nAnd: %s\n", yytext); return AND; }
-"OR"            { printf("\nOr: %s\n", yytext); return OR; }
-"NOT"           { printf("\nNot: %s\n", yytext); return NOT; }
+"("             { if (inConvDate) convDepth++; return PAR_IZQ; }
+")"             { if (inConvDate && --convDepth <= 0) { inConvDate = 0; convDepth = 0; } return PAR_DER; }
+"{"             { return LLA_IZQ; }
+"}"             { return LLA_DER; }
+"["             { return COR_IZQ; }
+"]"             { return COR_DER; }
+":"             { return DOS_PUNTOS; }
+","             { return COMA; }
+";"             { return PYC; }
+"."             { return PUNTO; }
 
-
-"isZero"        { printf("\nIsZero: %s\n", yytext); return ISZERO; }
-"convDate"      { printf("\nConvDate: %s\n", yytext); return CONVDATE; }
-
-
-":="            { printf("\nAsignacion: %s\n", yytext); return ASIG; }
-"=:"            { printf("\nAsignacion: %s\n", yytext); return ASIG; }
-
-
-"+"             { printf("\nSuma: %s\n", yytext); return SUMA; }
-"-"             { printf("\nResta: %s\n", yytext); return RESTA; }
-"*"             { printf("\nMultiplicacion: %s\n", yytext); return MULT; }
-"/"             { printf("\nDivision: %s\n", yytext); return DIV; }
-"%"             { printf("\nModulo: %s\n", yytext); return MOD; }
-
-
-"=="            { printf("\nIgual: %s\n", yytext); return IGUAL; }
-"!="            { printf("\nDistinto: %s\n", yytext); return DIST; }
-"<="            { printf("\nMenorIgual: %s\n", yytext); return MENOR_IG; }
-">="            { printf("\nMayorIgual: %s\n", yytext); return MAYOR_IG; }
-"<"             { printf("\nMenor: %s\n", yytext); return MENOR; }
-">"             { printf("\nMayor: %s\n", yytext); return MAYOR; }
-
-
-"&&"            { printf("\nAndLogico: %s\n", yytext); return AND_LOG; }
-"||"            { printf("\nOrLogico: %s\n", yytext); return OR_LOG; }
-"!"             { printf("\nNotLogico: %s\n", yytext); return NOT_LOG; }
-
-
-"("             { printf("\nParAbre: %s\n", yytext); return PAR_IZQ; }
-")"             { printf("\nParCierra: %s\n", yytext); return PAR_DER; }
-"{"             { printf("\nLlaveAbre: %s\n", yytext); return LLA_IZQ; }
-"}"             { printf("\nLlaveCierra: %s\n", yytext); return LLA_DER; }
-"["             { printf("\nCorAbre: %s\n", yytext); return COR_IZQ; }
-"]"             { printf("\nCorCierra: %s\n", yytext); return COR_DER; }
-":"             { printf("\nDosPuntos: %s\n", yytext); return DOS_PUNTOS; }
-","             { printf("\nComa: %s\n", yytext); return COMA; }
-";"             { printf("\nPuntoComa: %s\n", yytext); return PYC; }
+"#\+"([^#\n])*"\+#"   { /* ignorar comentario */ }
 
 {CTE_INT} {
-    long val = atol(yytext);
-    if (val > 32767 || val < -32768) {
-        printf("ERROR LEXICO: Constante entera fuera de rango: %s\n", yytext);
+    long v = atol(yytext);
+
+    /* Int de 16 bits con signo: rango -32768 a 32767 */
+    if (v > 32767 || v < -32768) {
+        printf("ERROR LEXICO: Constante entera fuera de rango (Int 16 bits): %s\n", yytext);
         exit(1);
     }
-    printf("\nConstante Entera: %s\n", yytext);
-    strcpy(yylval.cadena, yytext);  // Asigna el valor al union
+
+    printf("\nConstante Entera (Int 16 bits): %s\n", yytext);
+    strcpy(yylval.cadena, yytext);
     return CTE_INT;
 }
 
 {CTE_FLOAT} {
-    printf("\nConstante Real: %s\n", yytext);
-    strcpy(yylval.cadena, yytext);  // Asigna el valor al union
+    /* Float IEEE 754 simple precisión (aprox. ±3.4E38) */
+    double val = atof(yytext);
+
+    if (val > 3.4e38 || val < -3.4e38) {
+        printf("ERROR LEXICO: Constante flotante fuera de rango (Float 32 bits): %s\n", yytext);
+        exit(1);
+    }
+
+    /* Validar formato: separador decimal debe ser '.' */
+    if (strchr(yytext, ',') != NULL) {
+        printf("ERROR LEXICO: separador decimal inválido, use '.' en lugar de ',' (%s)\n", yytext);
+        exit(1);
+    }
+
+    printf("\nConstante Real (Float 32 bits): %s\n", yytext);
+    strcpy(yylval.cadena, yytext);
     return CTE_FLOAT;
 }
 
+
 \"([^\\"]|\\.)*\" {
-    if (strlen(yytext) - 2 > 50) {
-        printf("ERROR LEXICO: String demasiado largo: %s\n", yytext);
-        exit(1);
+    int len = (int)strlen(yytext) - 2;
+    if (len > 50) { printf("ERROR LEXICO: string largo\n"); exit(1); }
+    char val[60]; int j=0;
+    for (int i=1;i<(int)strlen(yytext)-1;i++){
+        if(yytext[i]=='\\' && yytext[i+1]=='\"'){ val[j++]='\"'; i++; }
+        else val[j++]=yytext[i];
     }
-    printf("\nConstante String: %s\n", yytext);
-
-
-    // Remover comillas y copiar el valor
-    char valor[50];
-    int j = 0;
-    for (int i = 1; i < strlen(yytext) - 1; i++) {
-        if (yytext[i] == '\\' && yytext[i+1] == '\"') {
-            valor[j++] = '\"';
-            i++;
-        } else {
-            valor[j++] = yytext[i];
-        }
-    }
-    valor[j] = '\0';
-    
-    strcpy(yylval.cadena, valor);
+    val[j]='\0';
+    strcpy(yylval.cadena,val);
     return CTE_STR;
 }
 
 {ID} {
-    if (strlen(yytext) > 30) {
-        printf("ERROR LEXICO: Identificador demasiado largo: %s\n", yytext);
-        exit(1);
-    }
-    printf("\nIdentificador: %s\n", yytext);
-    strcpy(yylval.cadena, yytext);  // Asigna el valor al union
+    if(strlen(yytext)>30){ printf("ERROR LEXICO: id largo\n"); exit(1); }
+    strcpy(yylval.cadena, yytext);
     return ID;
 }
 
-
-
-"#\+"([^#\n])*"\+#"   { /* ignorar comentario */ }
-
-
-[ \t\n\r]+      { /* ignorar */ }
-
-
-.               { printf("ERROR LEXICO : Caracter no reconocido: %s\n", yytext); exit(0); }
+[ \t\r\n]+    { }
+.             { printf("ERROR LEXICO: %s\n", yytext); exit(1); }
 
 %%

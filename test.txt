@@ -2,7 +2,7 @@
 init {
     a, b : Int;
     c, d : Float;
-    nombre, apellido : String;
+    nombre, apellido, fecha : String;
 }
 
 #+ ===== Asignaciones válidas ===== +#
