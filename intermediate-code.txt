@@ -22,6 +22,8 @@ b a - e * 3 - g :=
 
 0.2 0.3 - i :=
 
+.25 0.5 / j :=
+
 a READ
 
 "El valor de a es:" WRITE
@@ -116,4 +118,4 @@ ET11
 
 fecha WRITE
 
-Total de elementos: 168
+Total de elementos: 173

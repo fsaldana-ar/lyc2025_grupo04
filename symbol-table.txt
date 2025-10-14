@@ -13,6 +13,7 @@ h                              -                                       -
 c                              -                                       -       
 d                              -                                       -       
 i                              -                                       -       
+j                              -                                       -       
 nombre                         -                                       -       
 apellido                       -                                       -       
 fecha                          -                                       -       
@@ -24,6 +25,8 @@ _10                            CTE_Int      10                         -
 _2                             CTE_Int      2                          -       
 _0.2                           CTE_Float    0.2                        -       
 _0.3                           CTE_Float    0.3                        -       
+_.25                           CTE_Float    .25                        -       
+_0.5                           CTE_Float    0.5                        -       
 _El_valor_de_a_es:             CTE_String   El valor de a es:          17      
 _a_es_mayor_que_b              CTE_String   a es mayor que b           16      
 _a_es_menor_que_b              CTE_String   a es menor que b           16      
@@ -40,4 +43,4 @@ _08                            CTE_Int      08                         -
 _2025                          CTE_Int      2025                       -       
 _Fecha_convertida:             CTE_String   Fecha convertida:          17      
 
-Total de entradas: 35
+Total de entradas: 38

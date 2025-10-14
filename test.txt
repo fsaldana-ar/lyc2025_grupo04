@@ -1,7 +1,7 @@
 #+ ===== Declaración de variables ===== +#
 init {
-    a, b, e, f, g, h, j : Int;
-    c, d, i : Float;
+    a, b, e, f, g, h : Int;
+    c, d, i, j : Float;
     nombre, apellido, fecha : String;
 }
 
@@ -16,7 +16,7 @@ f := ((b - a) * e) - 3;
 g := ((b - a) * e) - (3);
 h := 2 * 3;
 i := 0.2 - 0.3;
-j := -5;
+j := .25 / 0.5;
 #+ ===== Entrada / Salida ===== +#
 read(a);
 write("El valor de a es:");
