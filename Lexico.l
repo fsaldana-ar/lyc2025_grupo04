@@ -16,7 +16,7 @@ static int convDepth = 0;
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-CTE_INT     {DIGITO}+|-{DIGITO}+
+CTE_INT     -?{DIGITO}+
 CTE_FLOAT   ({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
 ID          {LETRA}({LETRA}|{DIGITO})*
 
