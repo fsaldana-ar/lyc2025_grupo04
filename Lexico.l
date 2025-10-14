@@ -16,7 +16,7 @@ static int convDepth = 0;
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-CTE_INT     {DIGITO}+
+CTE_INT     {DIGITO}+|-{DIGITO}+
 CTE_FLOAT   ({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
 ID          {LETRA}({LETRA}|{DIGITO})*
 
@@ -66,7 +66,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 ";"             { return PYC; }
 "."             { return PUNTO; }
 
-"#\+"([^#\n])*"\+#"   { /* ignorar comentario */ }
+"#\+"([^#]|\n)*"\+#"   { /* ignorar comentario */ }
 
 {CTE_INT} {
     long v = atol(yytext);

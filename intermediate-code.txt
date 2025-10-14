@@ -12,6 +12,16 @@ c 2.0 / a b * - d :=
 
 10 3 %% a :=
 
+2 e :=
+
+b a - e * 3 - f :=
+
+b a - e * 3 - g :=
+
+2 3 * h :=
+
+0.2 0.3 - i :=
+
 a READ
 
 "El valor de a es:" WRITE
@@ -106,4 +116,4 @@ ET11
 
 fecha WRITE
 
-Total de elementos: 137
+Total de elementos: 168

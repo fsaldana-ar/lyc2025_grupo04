@@ -6,8 +6,13 @@ NOMBRE                         TIPO         VALOR                      LONGITUD
 -------------------------------------------------------------------------------
 a                              -                                       -       
 b                              -                                       -       
+e                              -                                       -       
+f                              -                                       -       
+g                              -                                       -       
+h                              -                                       -       
 c                              -                                       -       
 d                              -                                       -       
+i                              -                                       -       
 nombre                         -                                       -       
 apellido                       -                                       -       
 fecha                          -                                       -       
@@ -16,6 +21,9 @@ _3                             CTE_Int      3                          -
 _99.5                          CTE_Float    99.5                       -       
 _2.0                           CTE_Float    2.0                        -       
 _10                            CTE_Int      10                         -       
+_2                             CTE_Int      2                          -       
+_0.2                           CTE_Float    0.2                        -       
+_0.3                           CTE_Float    0.3                        -       
 _El_valor_de_a_es:             CTE_String   El valor de a es:          17      
 _a_es_mayor_que_b              CTE_String   a es mayor que b           16      
 _a_es_menor_que_b              CTE_String   a es menor que b           16      
@@ -32,4 +40,4 @@ _08                            CTE_Int      08                         -
 _2025                          CTE_Int      2025                       -       
 _Fecha_convertida:             CTE_String   Fecha convertida:          17      
 
-Total de entradas: 27
+Total de entradas: 35
