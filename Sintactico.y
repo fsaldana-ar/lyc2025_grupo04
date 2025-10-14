@@ -405,8 +405,6 @@ void validarComparacion(const char* a, const char* b, const char* op){
     char cadena[50];
 }
 
-%token ISZERO CONVDATE
-%token GUION  /* separador '-' dentro de convDate */
 %token <cadena> CTE_INT CTE_FLOAT CTE_STR
 %token <cadena> ID
 %token ASIG
@@ -420,6 +418,8 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %token MENOR MAYOR
 /* Operadores lógicos */
 %token AND OR NOT
+%token ISZERO CONVDATE
+%token GUION  /* separador '-' dentro de convDate */
 %token COMA PYC PUNTO
 
 /* Precedencias para resolver conflictos */
