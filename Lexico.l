@@ -16,8 +16,9 @@ static int convDepth = 0;
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-CTE_INT     {DIGITO}+
-CTE_FLOAT   ({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
+CONVDATET	({DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}{DIGITO}{DIGITO})
+CTE_INT     -?{DIGITO}+
+CTE_FLOAT   -?({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
 ID          {LETRA}({LETRA}|{DIGITO})*
 
 %%
@@ -30,6 +31,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 "write"         { return WRITE; }
 "Int"           { return INT; }
 "Float"         { return FLOAT; }
+"ConvdateT"		{ return CONVDATET; }
 "String"        { return STRING; }
 "isZero"        { return ISZERO; }
 "convDate"      { inConvDate = 1; convDepth = 0; return CONVDATE; }
@@ -102,6 +104,20 @@ ID          {LETRA}({LETRA}|{DIGITO})*
     return CTE_FLOAT;
 }
 
+{CONVDATET} {
+    /* Validar formato: debe tener el formato DD-MM-YYYY */
+    int d, m, y;
+	sscanf(yytext, "%2d-%2d-%4d", &d, &m, &y);
+	if (d < 1 || d > 31 || m < 1 || m > 12) {
+    	printf("ERROR LEXICO: Fecha invalida (%s)\n", yytext);
+    	exit(1);
+	}
+
+    printf("\nConvdate (Convdate 32 bits): %s\n", yytext);
+    strcpy(yylval.cadena, yytext);
+    return CONVDATET;
+}
+
 
 \"([^\\"]|\\.)*\" {
     int len = (int)strlen(yytext) - 2;
@@ -118,6 +134,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 
 {ID} {
     if(strlen(yytext)>30){ printf("ERROR LEXICO: id largo\n"); exit(1); }
+    printf("\nID detectado: %s\n", yytext);
     strcpy(yylval.cadena, yytext);
     return ID;
 }

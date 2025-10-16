@@ -11,32 +11,32 @@ int yyerror();
 int yylex();
 
 /* ============================
-   Tabla de símbolos
+   Tabla de sÃ­mbolos
    ============================ */
 typedef struct {
     char nombre[50];   // nombre de la variable o constante
-    char tipo[10];     // "Int" | "Float" | "String" | "-" (no tipada aún)
+    char tipo[10];     // "Int" | "Float" | "String" | "-" (no tipada aÃºn)
     char valor[50];    // valor (solo para constantes)
     int  longitud;     // longitud del string si aplica
 } Simbolo;
 
 Simbolo tabla[500];
 int indiceTabla = 0;
-/* Errores semánticos acumulados */
+/* Errores semÃ¡nticos acumulados */
 int erroresSemanticos = 0;
 
-/* Código intermedio (polaca inversa) */
+/* CÃ³digo intermedio (polaca inversa) */
 char codigoIntermedio[4096][256];
 int  indiceCodigo = 0;
 
-/* Generación de etiquetas y pilas para IF/WHILE */
+/* GeneraciÃ³n de etiquetas y pilas para IF/WHILE */
 int  nextEtiqueta = 1;
 char pilaElse[100][16]; int topeElse = -1;
 char pilaEnd [100][16]; int topeEnd  = -1;
 char pilaIni [100][16]; int topeIni  = -1;
 char pilaFin [100][16]; int topeFin  = -1;
 
-/* Búsqueda en tabla de símbolos */
+/* BÃºsqueda en tabla de sÃ­mbolos */
 int idxSimbolo(const char* nombre) {
     for (int i = 0; i < indiceTabla; i++) {
         if (strcmp(tabla[i].nombre, nombre) == 0) return i;
@@ -59,7 +59,7 @@ void nombreConstanteString(const char* valor, char* out, size_t outsz) {
     out[j] = '\0';
 }
 
-/* IDs pendientes de tipar en una declaración INIT {...} */
+/* IDs pendientes de tipar en una declaraciÃ³n INIT {...} */
 char idsPendientes[500][50];
 int  cantIdsPendientes = 0;
 
@@ -107,7 +107,7 @@ void agregarConstante(const char* valor, const char* tipo) {
     }
 
     strcpy(tabla[indiceTabla].nombre, nombreUnico);
-    /* guardamos el tipo real para validaciones, aunque la impresión muestre "-" */
+    /* guardamos el tipo real para validaciones, aunque la impresiÃ³n muestre "-" */
     strcpy(tabla[indiceTabla].tipo, tipo);
     strcpy(tabla[indiceTabla].valor, valor);
     if (strcmp(tipo, "String") == 0)
@@ -125,13 +125,13 @@ void volcarTabla() {
         return;
     }
 
-    /* Cálculo dinámico de anchos por contenido */
+    /* CÃ¡lculo dinÃ¡mico de anchos por contenido */
     int anchoNombre = (int)strlen("NOMBRE");
     int anchoTipo   = (int)strlen("TIPO");
     int anchoValor  = (int)strlen("VALOR");
     int anchoLong   = (int)strlen("LONGITUD");
 
-    /* mínimos agradables */
+    /* mÃ­nimos agradables */
     if (anchoNombre < 30) anchoNombre = 30;
     if (anchoTipo   < 10) anchoTipo   = 10;
     if (anchoValor  < 10) anchoValor  = 10;
@@ -181,7 +181,7 @@ void volcarTabla() {
 
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
     fprintf(f, "\n");
-    fprintf(f, "%*s\n", (ancho_total + 30) / 2, "TABLA DE SÍMBOLOS - LYC 2025");
+    fprintf(f, "%*s\n", (ancho_total + 30) / 2, "TABLA DE SÃ�MBOLOS - LYC 2025");
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
     fprintf(f, "\n\n");
 
@@ -238,13 +238,13 @@ void volcarTabla() {
 }
 
 /* ============================
-   Código intermedio: helpers
+   CÃ³digo intermedio: helpers
    ============================ */
 void agregarIntermedio(const char *valor) {
     strcpy(codigoIntermedio[indiceCodigo++], valor);
 }
 
-/* Helpers para volcado de código intermedio */
+/* Helpers para volcado de cÃ³digo intermedio */
 static int esOperadorTok(const char* t) {
     const char* ops[] = {"+","-","*","/","%%",":=","READ","WRITE",
                           "BF","BI","==","!=","<",">","<=",">=",
@@ -275,12 +275,12 @@ void volcarCodigoIntermedio() {
     }
 
     fprintf(f, "==============================\n");
-    fprintf(f, "CÓDIGO INTERMEDIO - POLACA INVERSA\n");
+    fprintf(f, "CÃ“DIGO INTERMEDIO - POLACA INVERSA\n");
     fprintf(f, "==============================\n\n");
-    /* Pretty print: instrucción por línea. Reglas:
-       - ':=', 'READ', 'WRITE' terminan línea.
-       - 'BF' y 'BI' consumen la etiqueta siguiente y terminan línea.
-       - Etiquetas ET# van en una línea sola.
+    /* Pretty print: instrucciÃ³n por lÃ­nea. Reglas:
+       - ':=', 'READ', 'WRITE' terminan lÃ­nea.
+       - 'BF' y 'BI' consumen la etiqueta siguiente y terminan lÃ­nea.
+       - Etiquetas ET# van en una lÃ­nea sola.
        - Se agregan comillas a tokens con espacios (strings) para legibilidad. */
     char line[1024];
     line[0] = '\0';
@@ -298,7 +298,7 @@ void volcarCodigoIntermedio() {
         /* BF/BI con su etiqueta siguiente */
         if ((strcmp(tok, "BF")==0 || strcmp(tok, "BI")==0) && (i+1) < indiceCodigo) {
             const char* et = codigoIntermedio[i+1];
-            /* Añadir el contenido de la línea acumulada antes de BF si hay */
+            /* AÃ±adir el contenido de la lÃ­nea acumulada antes de BF si hay */
             if (line[0] != '\0') { fprintf(f, "%s\n\n", line); line[0]='\0'; }
             fprintf(f, "%s %s\n\n", tok, et);
             i++; /* Consumimos la etiqueta */
@@ -313,7 +313,6 @@ void volcarCodigoIntermedio() {
                 if (*p==' ' || *p=='\t') { needsQuotes = 1; break; }
             }
             if (needsQuotes) {
-                snprintf(shown, sizeof(shown), "\"%s\"", tok);
             } else {
                 snprintf(shown, sizeof(shown), "%s", tok);
             }
@@ -323,13 +322,13 @@ void volcarCodigoIntermedio() {
 
         add_tok(line, shown);
 
-        /* Fin de instrucción: := / READ / WRITE */
+        /* Fin de instrucciÃ³n: := / READ / WRITE */
         if (strcmp(tok, ":=")==0 || strcmp(tok, "READ")==0 || strcmp(tok, "WRITE")==0) {
             flush_line(f, line);
         }
     }
 
-    /* Flush final si quedó algo */
+    /* Flush final si quedÃ³ algo */
     flush_line(f, line);
 
     fprintf(f, "Total de elementos: %d\n", indiceCodigo);
@@ -364,10 +363,10 @@ void error_semantico(const char* msg){
     erroresSemanticos++;
 }
 
-/* combinación de tipos para + - * / */
+/* combinaciÃ³n de tipos para + - * / */
 void combinarTiposArith(const char* a, const char* b, char* out /*>=10*/, const char* op){
     if (esString(a) || esString(b)) {
-        /* strings no permitidos en aritmética */
+        /* strings no permitidos en aritmÃ©tica */
         char buf[128];
         sprintf(buf, "Operador %s no admite String", op);
         error_semantico(buf);
@@ -385,7 +384,7 @@ void validarMod(const char* a, const char* b){
     }
 }
 
-/* Comparación: num con num, o String==String / String!=String */
+/* ComparaciÃ³n: num con num, o String==String / String!=String */
 void validarComparacion(const char* a, const char* b, const char* op){
     if (esString(a) || esString(b)) {
         if (!(esString(a) && esString(b) && (strcmp(op,"==")==0 || strcmp(op,"!=")==0))) {
@@ -406,6 +405,7 @@ void validarComparacion(const char* a, const char* b, const char* op){
 }
 
 %token <cadena> CTE_INT CTE_FLOAT CTE_STR
+%token <cadena> CONVDATET
 %token <cadena> ID
 %token ASIG
 %token SUMA MULT RESTA DIV MOD
@@ -416,7 +416,7 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %token <cadena> INT FLOAT STRING
 %token IGUAL DIST MENOR_IG MAYOR_IG
 %token MENOR MAYOR
-/* Operadores lógicos */
+/* Operadores lÃ³gicos */
 %token AND OR NOT
 %token ISZERO CONVDATE
 %token GUION  /* separador '-' dentro de convDate */
@@ -436,7 +436,7 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %%
 
 /* ============================
-   Reglas Sintácticas
+   Reglas SintÃ¡cticas
    ============================ */
 
 programa:
@@ -456,14 +456,14 @@ sentencia:
   | io
 ;
 
-/* ---------- Asignación ---------- */
+/* ---------- AsignaciÃ³n ---------- */
 asignacion:
     ID ASIG expresion PYC {
         if (!existeSimbolo($1)) {
             printf("ADVERTENCIA: Variable '%s' no declarada con INIT\n", $1);
             agregarVariable($1);
         }
-        /* Chequeo de tipos: si la var tiene tipo y la expr también, deben ser compatibles */
+        /* Chequeo de tipos: si la var tiene tipo y la expr tambiÃ©n, deben ser compatibles */
         const char* tvar = getTipoSimbolo($1);
         const char* texp = $3;
         if (strcmp(tvar,"-")!=0 && strcmp(texp,"-")!=0) {
@@ -471,14 +471,14 @@ asignacion:
                 error_semantico("Asignacion de tipo incompatible (String vs numerico)");
             }
         }
-        /* Generación PI: <expr> ID := */
+        /* GeneraciÃ³n PI: <expr> ID := */
         agregarIntermedio($1);
         agregarIntermedio(":=");
         printf("    ID := Expresion es ASIGNACION\n");
     }
 ;
 
-/* ---------- Expresiones aritméticas ---------- */
+/* ---------- Expresiones aritmÃ©ticas ---------- */
 expresion:
     termino                  { printf("    Termino es Expresion\n"); strcpy($$, $1); }
   | expresion SUMA termino   {
@@ -518,7 +518,8 @@ factor:
             agregarVariable($1); /* para no cascaderizar errores */
         }
         agregarIntermedio($1);
-        strcpy($$, getTipoSimbolo($1)); /* puede ser "-" si no tipada aún */
+        strcpy($$, getTipoSimbolo($1)); /* puede ser "-" si no tipada aÃºn */
+        printf("    ID es Factor\n");
         printf("    ID es Factor\n");
     }
   | CTE_INT {
@@ -539,12 +540,15 @@ factor:
         strcpy($$, "String");
         printf("    CTE es Factor\n");
     }
-  | PAR_IZQ expresion PAR_DER { strcpy($$, $2); printf("    Expresion entre parentesis es Factor\n"); }
-    | CONVDATE PAR_IZQ expresion GUION expresion GUION expresion PAR_DER {
+  | PAR_IZQ expresion PAR_DER { 
+  		strcpy($$, $2); 
+  		printf("    Expresion entre parentesis es Factor\n"); 
+  	}
+  | CONVDATE PAR_IZQ CONVDATET PAR_DER {
         /* d m a ya quedaron en PI por las reglas de expresion -> agrego operador */
-        agregarIntermedio("CONVDATE");
+        agregarIntermedio("CONVDATET");
         strcpy($$, "String");
-        printf("    convDate(Expresion-Expresion-Expresion) es Factor\n");
+        printf("    convDate(CONVDATET) es Factor\n");
     }
 ;
 
@@ -571,7 +575,7 @@ condicion:
                 /* PI: <expr> 0 ==  */
                 agregarIntermedio("0");
                 agregarIntermedio("==");
-                strcpy($$, "Int"); /* booleana (entera) para fines prácticos */
+                strcpy($$, "Int"); /* booleana (entera) para fines prÃ¡cticos */
                 printf("    ISZERO(Expresion) es Condicion\n");
         }
 ;
@@ -665,7 +669,7 @@ m_while_i:
 m_while_b:
     /* empty */ {
         char etFin[16];
-        /* Tras evaluar la condición, salto por falso al fin */
+        /* Tras evaluar la condiciÃ³n, salto por falso al fin */
         pop(pilaFin, &topeFin, etFin);
         push(pilaFin, &topeFin, etFin); /* lo volvemos a poner para usarlo al final */
         agregarIntermedio("BF");
@@ -743,7 +747,7 @@ io:
         printf("    READ(ID) es IO\n");
     }
   | WRITE PAR_IZQ expresion PAR_DER PYC {
-        /* String, Int o Float, todos válidos */
+        /* String, Int o Float, todos vÃ¡lidos */
         agregarIntermedio("WRITE");
         printf("    WRITE(Expresion) es IO\n");
     }
