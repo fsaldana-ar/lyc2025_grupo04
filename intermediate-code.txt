@@ -114,8 +114,6 @@ ET11
 
 CONVDATET fecha :=
 
-:= WRITE
-
 fecha WRITE
 
-Total de elementos: 164
+Total de elementos: 162

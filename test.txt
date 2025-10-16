@@ -64,7 +64,6 @@ if (isZero(a - 10)) {
 
 #+ ===== Tema especial: convDate ===== +#
 fecha := convDate(21-08-2025);
-write("Fecha convertida:");
 write(fecha);
 
 #+ ===== Casos de error (comentados) ===== +#

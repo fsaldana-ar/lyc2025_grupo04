@@ -418,7 +418,7 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %token MENOR MAYOR
 /* Operadores lÃ³gicos */
 %token AND OR NOT
-%token ISZERO CONVDATE
+%token <cadena> ISZERO CONVDATE
 %token GUION  /* separador '-' dentro de convDate */
 %token COMA PYC PUNTO
 
@@ -546,7 +546,9 @@ factor:
   	}
   | CONVDATE PAR_IZQ CONVDATET PAR_DER {
         /* d m a ya quedaron en PI por las reglas de expresion -> agrego operador */
+        agregarConstante($3, "String");
         agregarIntermedio("CONVDATET");
+ 
         strcpy($$, "String");
         printf("    convDate(CONVDATET) es Factor\n");
     }
