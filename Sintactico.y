@@ -405,7 +405,7 @@ void validarComparacion(const char* a, const char* b, const char* op){
 }
 
 %token <cadena> CTE_INT CTE_FLOAT CTE_STR
-%token <cadena> CONVDATET
+%token <cadena> DATE
 %token <cadena> ID
 %token ASIG
 %token SUMA MULT RESTA DIV MOD
@@ -416,10 +416,9 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %token <cadena> INT FLOAT STRING
 %token IGUAL DIST MENOR_IG MAYOR_IG
 %token MENOR MAYOR
-/* Operadores lÃ³gicos */
 %token AND OR NOT
 %token <cadena> ISZERO CONVDATE
-%token GUION  /* separador '-' dentro de convDate */
+%token GUION  /* separador '-' dentro de Date */
 %token COMA PYC PUNTO
 
 /* Precedencias para resolver conflictos */
@@ -544,13 +543,13 @@ factor:
   		strcpy($$, $2); 
   		printf("    Expresion entre parentesis es Factor\n"); 
   	}
-  | CONVDATE PAR_IZQ CONVDATET PAR_DER {
+  | CONVDATE PAR_IZQ DATE PAR_DER {
         /* d m a ya quedaron en PI por las reglas de expresion -> agrego operador */
         agregarConstante($3, "String");
-        agregarIntermedio("CONVDATET");
+        agregarIntermedio("DATE");
  
         strcpy($$, "String");
-        printf("    convDate(CONVDATET) es Factor\n");
+        printf("    convDate(DATE) es Factor\n");
     }
 ;
 

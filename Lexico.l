@@ -16,7 +16,7 @@ static int convDepth = 0;
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-CONVDATET	({DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}{DIGITO}{DIGITO})
+DATE		({DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}{DIGITO}{DIGITO})
 CTE_INT     -?{DIGITO}+
 CTE_FLOAT   -?({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
 ID          {LETRA}({LETRA}|{DIGITO})*
@@ -31,10 +31,10 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 "write"         { return WRITE; }
 "Int"           { return INT; }
 "Float"         { return FLOAT; }
-"ConvdateT"		{ return CONVDATET; }
+"Date"			{ return DATE; }
 "String"        { return STRING; }
 "isZero"        { return ISZERO; }
-"convDate"      { inConvDate = 1; convDepth = 0; return CONVDATE; }
+"convDate"      { inConvDate = 1; convDepth = 0; return DATE; }
 "AND"           { return AND; }
 "OR"            { return OR; }
 "NOT"           { return NOT; }
@@ -104,7 +104,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
     return CTE_FLOAT;
 }
 
-{CONVDATET} {
+{DATE} {
     /* Validar formato: debe tener el formato DD-MM-YYYY */
     int d, m, y;
 	sscanf(yytext, "%2d-%2d-%4d", &d, &m, &y);
@@ -115,7 +115,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 
     printf("\nConvdate (Convdate 32 bits): %s\n", yytext);
     strcpy(yylval.cadena, yytext);
-    return CONVDATET;
+    return DATE;
 }
 
 
