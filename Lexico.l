@@ -34,7 +34,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 "Date"			{ return DATE; }
 "String"        { return STRING; }
 "isZero"        { return ISZERO; }
-"convDate"      { inConvDate = 1; convDepth = 0; return DATE; }
+"convDate"      { inConvDate = 1; convDepth = 0; return CONVDATE; }
 "AND"           { return AND; }
 "OR"            { return OR; }
 "NOT"           { return NOT; }
@@ -108,11 +108,25 @@ ID          {LETRA}({LETRA}|{DIGITO})*
     /* Validar formato: debe tener el formato DD-MM-YYYY */
     int d, m, y;
 	sscanf(yytext, "%2d-%2d-%4d", &d, &m, &y);
-	if (d < 1 || d > 31 || m < 1 || m > 12) {
-    	printf("ERROR LEXICO: Fecha invalida (%s)\n", yytext);
+    printf("\nDia: %d", d);
+    printf("\nMes: %d", m);
+    printf("\nAño: %d", y);
+	int diaMax = 28;
+	if (m == 1 || m == 3 || m == 5 || m == 7 || m == 8 || m == 10 || m == 12) {
+		diaMax = 31;
+	}
+	if (m == 4 || m == 6 || m == 9 || m == 11) {
+		diaMax = 30;
+	}
+	if (m == 2 && ((y % 4 == 0) && (y % 100 != 0 || y % 400 == 0)) ) {
+		diaMax = 29;
+	}
+	if (d < 1 || d > diaMax || m < 1 || m > 12) {
+    	printf("\nERROR LEXICO: Fecha invalida (%s)\n", yytext);
     	exit(1);
 	}
 
+    printf("\nFecha convertida: %d%d%d\n", y, m, d);
     printf("\nConvdate (Convdate 32 bits): %s\n", yytext);
     strcpy(yylval.cadena, yytext);
     return DATE;

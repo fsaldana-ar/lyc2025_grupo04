@@ -112,7 +112,7 @@ BF ET11
 
 ET11
 
-CONVDATET fecha :=
+DATE fecha :=
 
 fecha WRITE
 
