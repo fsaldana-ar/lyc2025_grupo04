@@ -1,0 +1,437 @@
+
+ID detectado: a
+
+ID detectado: b
+
+ID detectado: e
+
+ID detectado: f
+
+ID detectado: g
+
+ID detectado: h
+    Lista_ids:Tipo; es Declaracion_tipo
+
+ID detectado: c
+
+ID detectado: d
+
+ID detectado: i
+
+ID detectado: j
+    Lista_ids:Tipo; es Declaracion_tipo
+
+ID detectado: nombre
+
+ID detectado: apellido
+
+ID detectado: fecha
+    Lista_ids:Tipo; es Declaracion_tipo
+    INIT{Lista_declaraciones} es Declaracion
+
+ID detectado: a
+
+Constante Entera (Int 16 bits): 5
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: b
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 3
+    CTE es Factor
+    Factor es Termino
+    Expresion+Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: c
+
+Constante Real (Float 32 bits): 99.5
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: d
+
+Constante Real (Float 32 bits): 5.0
+    CTE es Factor
+    Factor es Termino
+
+Constante Real (Float 32 bits): 8.0
+    CTE es Factor
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: a
+
+Constante Entera (Int 16 bits): 10
+    CTE es Factor
+    Factor es Termino
+
+Constante Entera (Int 16 bits): 3
+    CTE es Factor
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: e
+
+Constante Entera (Int 16 bits): -2
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: f
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Expresion-Termino es Expresion
+    Expresion entre parentesis es Factor
+    Factor es Termino
+
+ID detectado: e
+    ID es Factor
+    ID es Factor
+    Termino es Expresion
+    Expresion entre parentesis es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 3
+    CTE es Factor
+    Factor es Termino
+    Expresion-Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: g
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Expresion-Termino es Expresion
+    Expresion entre parentesis es Factor
+    Factor es Termino
+
+ID detectado: e
+    ID es Factor
+    ID es Factor
+    Termino es Expresion
+    Expresion entre parentesis es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 3
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion entre parentesis es Factor
+    Factor es Termino
+    Expresion-Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: h
+
+Constante Entera (Int 16 bits): 2
+    CTE es Factor
+    Factor es Termino
+
+Constante Entera (Int 16 bits): 3
+    CTE es Factor
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: i
+
+Constante Real (Float 32 bits): 0.2
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Real (Float 32 bits): 0.3
+    CTE es Factor
+    Factor es Termino
+    Expresion-Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: j
+
+Constante Real (Float 32 bits): -0.5
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: a
+    READ(ID) es IO
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion>Expresion es Comparacion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    IF(Condicion)Bloque es Seleccion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion<Expresion es Comparacion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    IF(Condicion)Bloque ELSE Bloque es Seleccion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 10
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion<Expresion es Comparacion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+
+ID detectado: a
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 1
+    CTE es Factor
+    Factor es Termino
+    Expresion+Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 5
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion<Expresion es Comparacion
+
+ID detectado: b
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 1
+    CTE es Factor
+    Factor es Termino
+    Expresion+Termino es Expresion
+    ID := Expresion es ASIGNACION
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    WHILE(Condicion)Bloque es Iteracion
+    {Lista_sentencias} es Bloque
+    WHILE(Condicion)Bloque es Iteracion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion<Expresion es Comparacion
+
+ID detectado: c
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: d
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion>Expresion es Comparacion
+    Condicion AND Condicion es Condicion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    IF(Condicion)Bloque es Seleccion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion<Expresion es Comparacion
+
+ID detectado: c
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: d
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion>Expresion es Comparacion
+    Condicion OR Condicion es Condicion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    IF(Condicion)Bloque es Seleccion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+ID detectado: b
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    Expresion>Expresion es Comparacion
+    NOT Condicion es Condicion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+    IF(Condicion)Bloque es Seleccion
+
+ID detectado: a
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+
+Constante Entera (Int 16 bits): 10
+    CTE es Factor
+    Factor es Termino
+    Expresion-Termino es Expresion
+    ISZERO(Expresion) es Condicion
+    CTE es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+    {Lista_sentencias} es Bloque
+
+ID detectado: fecha
+    IF(Condicion)Bloque es Seleccion
+
+Dia: 28
+Mes: 2
+Año: 2025
+Fecha convertida: 2025228
+
+Convdate (Convdate 32 bits): 28-02-2025
+    convDate(DATE) es Factor
+    Factor es Termino
+    Termino es Expresion
+    ID := Expresion es ASIGNACION
+
+ID detectado: fecha
+    ID es Factor
+    ID es Factor
+    Factor es Termino
+    Termino es Expresion
+    WRITE(Expresion) es IO
+ FIN
+
+>> symbol-table.txt generado correctamente
+
+>> intermediate-code.txt generado correctamente
+
+Compilacion semantica OK

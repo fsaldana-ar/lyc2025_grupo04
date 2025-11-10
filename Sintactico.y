@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "y.tab.h"
+#define MAX_POLACA 4096
 
 int yystopparser = 0;
 extern FILE *yyin;
@@ -26,8 +27,11 @@ int indiceTabla = 0;
 int erroresSemanticos = 0;
 
 /* CÃ³digo intermedio (polaca inversa) */
-char codigoIntermedio[4096][256];
+char codigoIntermedio[MAX_POLACA][256];
 int  indiceCodigo = 0;
+
+int pilaSaltos[MAX_POLACA];
+int topeSaltos = -1;
 
 /* GeneraciÃ³n de etiquetas y pilas para IF/WHILE */
 int  nextEtiqueta = 1;
@@ -244,7 +248,19 @@ void agregarIntermedio(const char *valor) {
     strcpy(codigoIntermedio[indiceCodigo++], valor);
 }
 
-/* Helpers para volcado de cÃ³digo intermedio */
+int reservarSalto() {
+    agregarIntermedio("_");
+    return indiceCodigo - 1;
+}
+
+void completarSalto(int pos, int destino) {
+    sprintf(codigoIntermedio[pos], "%d", destino);
+}
+
+void pushSalto(int valor) { pilaSaltos[++topeSaltos] = valor; }
+int popSalto() { return pilaSaltos[topeSaltos--]; }
+
+/* Helpers para volcado de código intermedio */
 static int esOperadorTok(const char* t) {
     const char* ops[] = {"+","-","*","/","%%",":=","READ","WRITE",
                           "BF","BI","==","!=","<",">","<=",">=",
@@ -453,6 +469,7 @@ sentencia:
   | iteracion
   | declaracion
   | io
+  | condicion
 ;
 
 /* ---------- AsignaciÃ³n ---------- */
@@ -555,97 +572,172 @@ factor:
 
 /* ---------- Condiciones ---------- */
 condicion:
-        /* Precedencia y asociatividad definidas por %left/%right */
-        condicion OR condicion {
-                agregarIntermedio("OR");
-                strcpy($$, "Int");
-                printf("    Condicion OR Condicion es Condicion\n");
-        }
+      comparacion { strcpy($$, $1); }
+
     | condicion AND condicion {
-                agregarIntermedio("AND");
-                strcpy($$, "Int");
-                printf("    Condicion AND Condicion es Condicion\n");
-        }
+            // Si la primera condición es falsa → salta al final del AND
+            int pos = popSalto();
+            completarSalto(pos, indiceCodigo);
+            printf("    Condicion AND Condicion es Condicion\n");
+            strcpy($$, "Int");
+    }
+
+    | condicion OR condicion {
+            // Si la primera es verdadera → salta al final del OR
+            int pos = popSalto();
+            agregarIntermedio("BI");
+            int posBI = reservarSalto();
+            completarSalto(pos, indiceCodigo);
+            pushSalto(posBI);
+            printf("    Condicion OR Condicion es Condicion\n");
+            strcpy($$, "Int");
+    }
+
     | NOT condicion {
-                agregarIntermedio("NOT");
-                strcpy($$, "Int");
-                printf("    NOT Condicion es Condicion\n");
-        }
-    | comparacion { strcpy($$, $1); }
+            // Invierte el operador de salto anterior
+            int pos = popSalto();
+            char *op = codigoIntermedio[pos - 1];
+            if      (strcmp(op,"BGE")==0) strcpy(codigoIntermedio[pos-1],"BLT");
+            else if (strcmp(op,"BLE")==0) strcpy(codigoIntermedio[pos-1],"BGT");
+            else if (strcmp(op,"BGT")==0) strcpy(codigoIntermedio[pos-1],"BLE");
+            else if (strcmp(op,"BLT")==0) strcpy(codigoIntermedio[pos-1],"BGE");
+            else if (strcmp(op,"BEQ")==0) strcpy(codigoIntermedio[pos-1],"BNE");
+            else if (strcmp(op,"BNE")==0) strcpy(codigoIntermedio[pos-1],"BEQ");
+            pushSalto(pos);
+            printf("    NOT Condicion es Condicion\n");
+            strcpy($$, "Int");
+    }
+
     | ISZERO PAR_IZQ expresion PAR_DER {
-                /* PI: <expr> 0 ==  */
-                agregarIntermedio("0");
-                agregarIntermedio("==");
-                strcpy($$, "Int"); /* booleana (entera) para fines prÃ¡cticos */
-                printf("    ISZERO(Expresion) es Condicion\n");
-        }
+            agregarIntermedio("0");
+            agregarIntermedio("CMP");
+            agregarIntermedio("BNE");
+            int p = reservarSalto();
+            pushSalto(p);
+            strcpy($$, "Int");
+            printf("    ISZERO(Expresion) es Condicion\n");
+    }
 ;
 
+
 comparacion:
-    expresion MENOR expresion    { validarComparacion($1,$3,"<");  agregarIntermedio("<");  strcpy($$, "Int"); printf("    Expresion<Expresion es Comparacion\n"); }
-  | expresion MAYOR expresion    { validarComparacion($1,$3,">");  agregarIntermedio(">");  strcpy($$, "Int"); printf("    Expresion>Expresion es Comparacion\n"); }
-  | expresion MENOR_IG expresion { validarComparacion($1,$3,"<="); agregarIntermedio("<="); strcpy($$, "Int"); printf("    Expresion<=Expresion es Comparacion\n"); }
-  | expresion MAYOR_IG expresion { validarComparacion($1,$3,">="); agregarIntermedio(">="); strcpy($$, "Int"); printf("    Expresion>=Expresion es Comparacion\n"); }
-  | expresion IGUAL expresion    { validarComparacion($1,$3,"=="); agregarIntermedio("=="); strcpy($$, "Int"); printf("    Expresion==Expresion es Comparacion\n"); }
-  | expresion DIST expresion     { validarComparacion($1,$3,"!="); agregarIntermedio("!="); strcpy($$, "Int"); printf("    Expresion!=Expresion es Comparacion\n"); }
+    expresion MENOR expresion {
+        validarComparacion($1,$3,"<");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BGE");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+    }
+  | expresion MAYOR expresion {
+        validarComparacion($1,$3,">");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BLE");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+    }
+  | expresion MENOR_IG expresion {
+        validarComparacion($1,$3,"<=");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BGT");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+    }
+  | expresion MAYOR_IG expresion {
+        validarComparacion($1,$3,">=");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BLT");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+    }
+  | expresion IGUAL expresion {
+        validarComparacion($1,$3,"==");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BNE");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+    }
+  | expresion DIST expresion {
+        validarComparacion($1,$3,"!=");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BEQ");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+    }
+;
+
+condicion_fin:
+    /* empty */ {
+        while (topeSaltos >= 0) {
+            int pos = popSalto();
+            completarSalto(pos, indiceCodigo);
+        }
+    }
+;
+
+if_sentencia:
+    IF PAR_IZQ condicion PAR_DER condicion_fin bloque if_fin
+;
+
+if_fin:
+    /* empty */ {
+        int pos = popSalto();
+        completarSalto(pos, indiceCodigo);
+    }
 ;
 
 /* ---------- If / If-Else ---------- */
+/* ---------- If / If-Else ---------- */
 seleccion:
-    /* IF (cond) {bloque}  =>  <cond> BF ETelse  <bloque>  ETelse */
+    /* IF (cond) {bloque}  =>  <cond> BF idxElse  <bloque>  idxElse */
     IF PAR_IZQ condicion PAR_DER m_if bloque n_if %prec IFX
   | /* IF (cond) {bloque} ELSE {bloque} =>
-       <cond> BF ETelse  <bloque_then> BI ETend  ETelse  <bloque_else>  ETend */
+       <cond> BF idxElse  <bloque_then> BI idxEnd  idxElse  <bloque_else>  idxEnd */
     IF PAR_IZQ condicion PAR_DER m_if bloque m_else ELSE bloque n_ifelse
 ;
 
-/* Marcadores para colocar etiquetas/saltos en el lugar correcto */
+/* -------- Marcadores -------- */
+
 m_if:
     /* empty */ {
-        char etElse[16];
-        nuevaEtiqueta(etElse);
-        push(pilaElse, &topeElse, etElse);
-        /* Salto por falso a ETelse */
-        agregarIntermedio("BF");
-        agregarIntermedio(etElse);
+        // No reservar salto nuevo — ya lo hizo la comparación
+        // Simplemente mantenemos el salto en pila
     }
 ;
 
 m_else:
     /* empty */ {
-        char etElse[16];
-        char etEnd[16];
-        /* Creamos etiqueta de fin y la apilamos */
-        nuevaEtiqueta(etEnd);
-        push(pilaEnd, &topeEnd, etEnd);
-        /* Salto incondicional al fin del if */
-        agregarIntermedio("BI");
-        agregarIntermedio(etEnd);
-        /* Materializamos ETelse (destino del BF) */
-        pop(pilaElse, &topeElse, etElse);
-        agregarIntermedio(etElse);
+        int posSaltoFalso = popSalto();       // saca el salto condicional pendiente
+        agregarIntermedio("BI");              // salto incondicional al final
+        int posBI = reservarSalto();          // reserva posición para BI
+        completarSalto(posSaltoFalso, indiceCodigo); // completa salto falso
+        pushSalto(posBI);                     // guarda BI para completarlo luego
     }
 ;
 
 n_if:
     /* empty */ {
-        char etElse[16];
-        /* Cierra el IF sin ELSE */
-        pop(pilaElse, &topeElse, etElse);
-        agregarIntermedio(etElse);
+        int posSalto = popSalto();
+        completarSalto(posSalto, indiceCodigo);
         printf("    IF(Condicion)Bloque es Seleccion\n");
     }
 ;
 
 n_ifelse:
     /* empty */ {
-        char etEnd[16];
-        /* Materializa fin de IF-ELSE */
-        pop(pilaEnd, &topeEnd, etEnd);
-        agregarIntermedio(etEnd);
+        int posBI = popSalto();
+        completarSalto(posBI, indiceCodigo);
         printf("    IF(Condicion)Bloque ELSE Bloque es Seleccion\n");
     }
 ;
+
+
+
 
 /* ---------- While ---------- */
 /* while (cond) {bloque} =>

@@ -30,87 +30,53 @@ READ WRITE
 
 a WRITE
 
-a b >
+a b CMP BLE 68 68 WRITE
 
-BF ET1
+a b CMP BGE 77 77 WRITE
 
-> WRITE
-
-ET1
-
-a b <
-
-BF ET2
-
-< WRITE
-
-BI ET3
-
-ET2
+BI 79
 
 WRITE WRITE
 
-ET3
+ET1
 
-ET4
+a 10 CMP BGE _
 
-a 10 <
+BF ET2
 
-BF ET5
-
-< WRITE
+_ WRITE
 
 a 1 + a :=
 
-ET6
+ET3
 
-b 5 <
+b 5 CMP BGE _
 
-BF ET7
+BF ET4
 
 b 1 + b :=
 
 := WRITE
 
-BI ET6
+BI ET3
 
-ET7
+ET4
 
-BI ET4
+BI ET1
 
-ET5
+ET2
 
-a b < c d > AND
+a b CMP BGE 127 c d CMP BLE 125 125 WRITE
 
-BF ET8
+a b CMP BGE _ c d CMP BLE 139
 
-AND WRITE
+BI 141
 
-ET8
+139 WRITE
 
-a b < c d > OR
+a b CMP BGT 148 148 WRITE
 
-BF ET9
-
-OR WRITE
-
-ET9
-
-a b > NOT
-
-BF ET10
-
-NOT WRITE
-
-ET10
-
-a 10 - 0 ==
-
-BF ET11
-
-== WRITE
-
-ET11
+a 10 - 0 CMP BNE 157 157 WRITE
 
 DATE fecha :=
 

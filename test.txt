@@ -63,7 +63,7 @@ if (isZero(a - 10)) {
 }
 
 #+ ===== Tema especial: convDate ===== +#
-fecha := convDate(29-02-2025);
+fecha := convDate(28-02-2025);
 write(fecha);
 
 #+ ===== Casos de error (comentados) ===== +#
