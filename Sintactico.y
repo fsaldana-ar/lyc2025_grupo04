@@ -31,7 +31,7 @@ char codigoIntermedio[MAX_POLACA][256];
 int  indiceCodigo = 0;
 
 int pilaSaltos[MAX_POLACA];
-int topeSaltos = -1;
+int topePilaSaltos = -1;
 
 /* GeneraciÃ³n de etiquetas y pilas para IF/WHILE */
 int  nextEtiqueta = 1;
@@ -39,6 +39,17 @@ char pilaElse[100][16]; int topeElse = -1;
 char pilaEnd [100][16]; int topeEnd  = -1;
 char pilaIni [100][16]; int topeIni  = -1;
 char pilaFin [100][16]; int topeFin  = -1;
+
+int pilaNivelesIf[MAX_POLACA];
+int topeNivelesIf = -1;
+
+void pushSalto(int pos) { pilaSaltos[++topePilaSaltos] = pos; }
+int popSalto() { return pilaSaltos[topePilaSaltos--]; }
+int cantSaltos() { return topePilaSaltos + 1; }
+
+void pushNivelIf() { pilaNivelesIf[++topeNivelesIf] = topePilaSaltos; }
+int popNivelIf() { return pilaNivelesIf[topeNivelesIf--]; }
+
 
 /* BÃºsqueda en tabla de sÃ­mbolos */
 int idxSimbolo(const char* nombre) {
@@ -257,9 +268,6 @@ void completarSalto(int pos, int destino) {
     sprintf(codigoIntermedio[pos], "%d", destino);
 }
 
-void pushSalto(int valor) { pilaSaltos[++topeSaltos] = valor; }
-int popSalto() { return pilaSaltos[topeSaltos--]; }
-
 /* Helpers para volcado de código intermedio */
 static int esOperadorTok(const char* t) {
     const char* ops[] = {"+","-","*","/","%%",":=","READ","WRITE",
@@ -290,9 +298,9 @@ void volcarCodigoIntermedio() {
         return;
     }
 
-    fprintf(f, "==============================\n");
+    /* fprintf(f, "==============================\n");
     fprintf(f, "CÃ“DIGO INTERMEDIO - POLACA INVERSA\n");
-    fprintf(f, "==============================\n\n");
+    fprintf(f, "==============================\n\n"); */
     /* Pretty print: instrucciÃ³n por lÃ­nea. Reglas:
        - ':=', 'READ', 'WRITE' terminan lÃ­nea.
        - 'BF' y 'BI' consumen la etiqueta siguiente y terminan lÃ­nea.
@@ -304,6 +312,8 @@ void volcarCodigoIntermedio() {
     for (int i = 0; i < indiceCodigo; i++) {
         const char* tok = codigoIntermedio[i];
 
+        fprintf(f, "[%d] %s\n", i, codigoIntermedio[i]);
+        continue;
         /* Etiqueta aislada */
         if (esEtiquetaTok(tok)) {
             flush_line(f, line);
@@ -575,20 +585,21 @@ condicion:
       comparacion { strcpy($$, $1); }
 
     | condicion AND condicion {
-            // Si la primera condición es falsa → salta al final del AND
-            int pos = popSalto();
-            completarSalto(pos, indiceCodigo);
-            printf("    Condicion AND Condicion es Condicion\n");
-            strcpy($$, "Int");
+        // En un AND, ambos falsos deben saltar al mismo lugar
+        int pos2 = popSalto(); // salto falso de la segunda condición
+        int pos1 = popSalto(); // salto falso de la primera condición
+
+        printf("    Condicion AND Condicion es Condicion\n");
+        strcpy($$, "Int");
     }
+
+    
 
     | condicion OR condicion {
             // Si la primera es verdadera → salta al final del OR
             int pos = popSalto();
             agregarIntermedio("BI");
-            int posBI = reservarSalto();
             completarSalto(pos, indiceCodigo);
-            pushSalto(posBI);
             printf("    Condicion OR Condicion es Condicion\n");
             strcpy($$, "Int");
     }
@@ -703,12 +714,10 @@ seleccion:
 
 /* -------- Marcadores -------- */
 
-m_if:
-    /* empty */ {
-        // No reservar salto nuevo — ya lo hizo la comparación
-        // Simplemente mantenemos el salto en pila
-    }
-;
+m_if: {
+    pushNivelIf();                // <--- marca el inicio del IF actual
+    printf("    m_if: nuevo nivel de IF (nivel=%d)\n", topeNivelesIf);
+}
 
 m_else:
     /* empty */ {
@@ -720,13 +729,14 @@ m_else:
     }
 ;
 
-n_if:
-    /* empty */ {
-        int posSalto = popSalto();
-        completarSalto(posSalto, indiceCodigo);
-        printf("    IF(Condicion)Bloque es Seleccion\n");
+n_if: {
+    int limite = popNivelIf();    // <--- recupera el nivel de inicio del IF
+    while (topePilaSaltos > limite) {
+        int pos = popSalto();
+        completarSalto(pos, indiceCodigo);
+        printf("    n_if: completado salto en %d -> %d\n", pos, indiceCodigo);
     }
-;
+}
 
 n_ifelse:
     /* empty */ {
@@ -765,7 +775,6 @@ m_while_b:
         /* Tras evaluar la condiciÃ³n, salto por falso al fin */
         pop(pilaFin, &topeFin, etFin);
         push(pilaFin, &topeFin, etFin); /* lo volvemos a poner para usarlo al final */
-        agregarIntermedio("BF");
         agregarIntermedio(etFin);
     }
 ;

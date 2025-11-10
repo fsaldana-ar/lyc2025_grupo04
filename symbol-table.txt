@@ -17,28 +17,11 @@ j                              -                                       -
 nombre                         -                                       -       
 apellido                       -                                       -       
 fecha                          -                                       -       
-_5                             CTE_Int      5                          -       
-_3                             CTE_Int      3                          -       
-_99.5                          CTE_Float    99.5                       -       
-_5.0                           CTE_Float    5.0                        -       
-_8.0                           CTE_Float    8.0                        -       
-_10                            CTE_Int      10                         -       
-_-2                            CTE_Int      -2                         -       
-_2                             CTE_Int      2                          -       
-_0.2                           CTE_Float    0.2                        -       
-_0.3                           CTE_Float    0.3                        -       
-_-0.5                          CTE_Float    -0.5                       -       
-_El_valor_de_a_es:             CTE_String   El valor de a es:          17      
 _a_es_mayor_que_b              CTE_String   a es mayor que b           16      
 _a_es_menor_que_b              CTE_String   a es menor que b           16      
 _a_es_mayor_o_igual_que_b      CTE_String   a es mayor o igual que b   24      
-_Incrementando_a               CTE_String   Incrementando a            15      
-_1                             CTE_Int      1                          -       
-_Ciclo_anidado                 CTE_String   Ciclo anidado              13      
 _Condición_AND_verdadera      CTE_String   Condición AND verdadera   24      
 _Condición_OR_verdadera       CTE_String   Condición OR verdadera    23      
 _Condición_NOT_verdadera      CTE_String   Condición NOT verdadera   24      
-_a_es_igual_a_10               CTE_String   a es igual a 10            15      
-_28-02-2025                    CTE_String   28-02-2025                 10      
 
-Total de entradas: 36
+Total de entradas: 19

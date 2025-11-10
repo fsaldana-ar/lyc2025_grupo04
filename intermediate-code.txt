@@ -1,85 +1,51 @@
-==============================
-CÃ“DIGO INTERMEDIO - POLACA INVERSA
-==============================
-
-5 a :=
-
-a 3 + b :=
-
-99.5 c :=
-
-5.0 8.0 * d :=
-
-10 3 %% a :=
-
--2 e :=
-
-b a - e * 3 - f :=
-
-b a - e * 3 - g :=
-
-2 3 * h :=
-
-0.2 0.3 - i :=
-
--0.5 j :=
-
-a READ
-
-READ WRITE
-
-a WRITE
-
-a b CMP BLE 68 68 WRITE
-
-a b CMP BGE 77 77 WRITE
-
-BI 79
-
-WRITE WRITE
-
-ET1
-
-a 10 CMP BGE _
-
-BF ET2
-
-_ WRITE
-
-a 1 + a :=
-
-ET3
-
-b 5 CMP BGE _
-
-BF ET4
-
-b 1 + b :=
-
-:= WRITE
-
-BI ET3
-
-ET4
-
-BI ET1
-
-ET2
-
-a b CMP BGE 127 c d CMP BLE 125 125 WRITE
-
-a b CMP BGE _ c d CMP BLE 139
-
-BI 141
-
-139 WRITE
-
-a b CMP BGT 148 148 WRITE
-
-a 10 - 0 CMP BNE 157 157 WRITE
-
-DATE fecha :=
-
-fecha WRITE
-
-Total de elementos: 162
+[0] a
+[1] b
+[2] CMP
+[3] BLE
+[4] _
+[5] a es mayor que b
+[6] WRITE
+[7] a
+[8] b
+[9] CMP
+[10] BGE
+[11] 16
+[12] a es menor que b
+[13] WRITE
+[14] BI
+[15] 18
+[16] a es mayor o igual que b
+[17] WRITE
+[18] a
+[19] b
+[20] CMP
+[21] BGE
+[22] _
+[23] c
+[24] d
+[25] CMP
+[26] BLE
+[27] _
+[28] Condición AND verdadera
+[29] WRITE
+[30] a
+[31] b
+[32] CMP
+[33] BGE
+[34] _
+[35] c
+[36] d
+[37] CMP
+[38] BLE
+[39] 41
+[40] BI
+[41] Condición OR verdadera
+[42] WRITE
+[43] a
+[44] b
+[45] CMP
+[46] BGT
+[47] _
+[48] Condición NOT verdadera
+[49] WRITE
+Total de elementos: 50
