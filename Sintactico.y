@@ -43,6 +43,9 @@ char pilaFin [100][16]; int topeFin  = -1;
 int nivelIf[MAX_POLACA];
 int topeNivelesIf = -1;
 
+int nivelWhile[MAX_POLACA];
+int topeNivelesWhile = -1;
+
 int popSalto() {
     int pos = pilaSaltos[topePilaSaltos--];
     printf("POP: pos=%d newTope=%d\n", pos, topePilaSaltos);
@@ -57,6 +60,19 @@ void pushNivelIf() {
 int popNivelIf() {
     int v = nivelIf[topeNivelesIf--];
     printf("POPNIVEL: devolviendo v=%d nuevoTopeNivel=%d\n", v, topeNivelesIf);
+    return v;
+}
+
+// --- WHILE ---
+
+void pushNivelWhile() {
+    nivelWhile[++topeNivelesWhile] = topePilaSaltos;
+    printf("PUSHNIVEL_WHILE: nivel=%d topeSaltos=%d\n", topeNivelesWhile, topePilaSaltos);
+}
+
+int popNivelWhile() {
+    int v = nivelWhile[topeNivelesWhile--];
+    printf("POPNIVEL_WHILE: devolviendo v=%d nuevoTopeNivel=%d\n", v, topeNivelesWhile);
     return v;
 }
 
@@ -778,39 +794,36 @@ iteracion:
 ;
 
 m_while_i:
-    /* empty */ {
-        char etIni[16];
-        char etFin[16];
-        nuevaEtiqueta(etIni);
-        nuevaEtiqueta(etFin);
-        push(pilaIni, &topeIni, etIni);
-        push(pilaFin, &topeFin, etFin);
-        /* Materializamos etiqueta de inicio del ciclo */
-        agregarIntermedio(etIni);
+    {
+        // Marca el inicio del while
+        pushNivelWhile();
+        popSalto(indiceCodigo);
+        printf("m_while: inicio del WHILE en %d\n", indiceCodigo);
     }
 ;
 
 m_while_b:
-    /* empty */ {
-        char etFin[16];
-        /* Tras evaluar la condiciÃ³n, salto por falso al fin */
-        pop(pilaFin, &topeFin, etFin);
-        push(pilaFin, &topeFin, etFin); /* lo volvemos a poner para usarlo al final */
-        agregarIntermedio(etFin);
+    {
+        // Reservar salto al final del while (condición falsa)
+        int posSaltoFalso = reservarSalto();
+        pushSalto(posSaltoFalso);
+        printf("m_cwhile: salto falso reservado en %d\n", posSaltoFalso);
     }
 ;
 
 n_while:
-    /* empty */ {
-        char etIni[16];
-        char etFin[16];
-        pop(pilaIni, &topeIni, etIni);
-        pop(pilaFin, &topeFin, etFin);
-        /* Salta al inicio y materializa el fin */
-        agregarIntermedio("BI");
-        agregarIntermedio(etIni);
-        agregarIntermedio(etFin);
-        printf("    WHILE(Condicion)Bloque es Iteracion\n");
+    {
+        printf("n_while ejecutada\n");
+        int limite = popNivelWhile();
+        printf("n_while: limite=%d topeSaltos=%d\n", limite, topePilaSaltos);
+
+        while (topePilaSaltos >= limite) {
+            int posSaltoFalso = popSalto();
+            printf("n_while: completando salto en %d -> %d\n", posSaltoFalso, indiceCodigo);
+            completarSalto(posSaltoFalso, indiceCodigo);
+        }
+
+
     }
 ;
 

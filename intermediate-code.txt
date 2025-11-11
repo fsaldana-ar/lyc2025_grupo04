@@ -1,34 +1,14 @@
 [0] a
-[1] b
+[1] 10
 [2] CMP
 [3] BGE
-[4] 12
-[5] c
-[6] d
-[7] CMP
-[8] BLE
-[9] 12
-[10] Condición AND verdadera
-[11] WRITE
-[12] a
-[13] b
-[14] CMP
-[15] BGE
-[16] 19
-[17] BI
-[18] 24
-[19] c
-[20] d
-[21] CMP
-[22] BLE
-[23] 26
-[24] Condición OR verdadera
-[25] WRITE
-[26] a
-[27] b
-[28] CMP
-[29] BGT
-[30] 33
-[31] Condición NOT verdadera
-[32] WRITE
-Total de elementos: 33
+[4] 13
+[5] 13
+[6] Incrementando a
+[7] WRITE
+[8] a
+[9] 1
+[10] +
+[11] a
+[12] :=
+Total de elementos: 13

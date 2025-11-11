@@ -1,24 +1,24 @@
-===============================================================================
-                      TABLA DE SÃ�MBOLOS - LYC 2025
-===============================================================================
+======================================================================
+                  TABLA DE SÃ�MBOLOS - LYC 2025
+======================================================================
 
-NOMBRE                         TIPO         VALOR                      LONGITUD
--------------------------------------------------------------------------------
-a                              -                                       -       
-b                              -                                       -       
-e                              -                                       -       
-f                              -                                       -       
-g                              -                                       -       
-h                              -                                       -       
-c                              -                                       -       
-d                              -                                       -       
-i                              -                                       -       
-j                              -                                       -       
-nombre                         -                                       -       
-apellido                       -                                       -       
-fecha                          -                                       -       
-_Condición_AND_verdadera      CTE_String   Condición AND verdadera   24      
-_Condición_OR_verdadera       CTE_String   Condición OR verdadera    23      
-_Condición_NOT_verdadera      CTE_String   Condición NOT verdadera   24      
+NOMBRE                         TIPO         VALOR             LONGITUD
+----------------------------------------------------------------------
+a                              -                              -       
+b                              -                              -       
+e                              -                              -       
+f                              -                              -       
+g                              -                              -       
+h                              -                              -       
+c                              -                              -       
+d                              -                              -       
+i                              -                              -       
+j                              -                              -       
+nombre                         -                              -       
+apellido                       -                              -       
+fecha                          -                              -       
+_10                            CTE_Int      10                -       
+_Incrementando_a               CTE_String   Incrementando a   15      
+_1                             CTE_Int      1                 -       
 
 Total de entradas: 16
