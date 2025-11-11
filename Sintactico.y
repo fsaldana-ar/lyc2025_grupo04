@@ -12,19 +12,33 @@ int yyerror();
 int yylex();
 
 /* ============================
-   Tabla de sÃ­mbolos
-   ============================ */
+    Tabla de simbolos
+    ============================ */
 typedef struct {
-    char nombre[50];   // nombre de la variable o constante
-    char tipo[10];     // "Int" | "Float" | "String" | "-" (no tipada aÃºn)
-    char valor[50];    // valor (solo para constantes)
-    int  longitud;     // longitud del string si aplica
+    char nombre[50];    // nombre de la variable o constante
+    char tipo[10];      // "Int" | "Float" | "String" | "-" (no tipada aÃºn)
+    char valor[50];     // valor (solo para constantes)
+    int  longitud;      // longitud del string si aplica
 } Simbolo;
 
 Simbolo tabla[500];
 int indiceTabla = 0;
-/* Errores semÃ¡nticos acumulados */
+/* Errores semanticos acumulados */
 int erroresSemanticos = 0;
+
+/*
+ * Convierte un string "dd-mm-yyyy" en un entero YYYYMMDD.
+ */
+int convertirFechaYYYYMMDD(const char* fechaStr) {
+    int dia, mes, anio;
+    // sscanf es perfecto para desarmar strings con formato
+    if (sscanf(fechaStr, "%d-%d-%d", &dia, &mes, &anio) == 3) {
+        return (anio * 10000) + (mes * 100) + dia;
+    }
+    // Devolver 0 o algun valor de error si el formato es incorrecto
+    return 0; 
+}
+
 
 /* CÃ³digo intermedio (polaca inversa) */
 char codigoIntermedio[MAX_POLACA][256];
@@ -77,7 +91,9 @@ int popNivelWhile() {
 }
 
 
-/* BÃºsqueda en tabla de sÃ­mbolos */
+
+
+/* Busqueda en tabla de si­mbolos */
 int idxSimbolo(const char* nombre) {
     for (int i = 0; i < indiceTabla; i++) {
         if (strcmp(tabla[i].nombre, nombre) == 0) return i;
@@ -100,7 +116,7 @@ void nombreConstanteString(const char* valor, char* out, size_t outsz) {
     out[j] = '\0';
 }
 
-/* IDs pendientes de tipar en una declaraciÃ³n INIT {...} */
+/* IDs pendientes de tipar en una declaracion INIT {...} */
 char idsPendientes[500][50];
 int  cantIdsPendientes = 0;
 
@@ -138,7 +154,13 @@ void agregarConstante(const char* valor, const char* tipo) {
     if (existeConstante(valor)) return;
 
     char nombreUnico[50];
-    if (strcmp(tipo, "Int") == 0 || strcmp(tipo, "Float") == 0) {
+    
+    /* * =============================================
+     * == PASO 3: Modificación de agregarConstante ==
+     * =============================================
+     * Incluimos "Date" para que se guarde como _YYYYMMDD
+     */
+    if (strcmp(tipo, "Int") == 0 || strcmp(tipo, "Float") == 0 || strcmp(tipo, "Date") == 0) {
         sprintf(nombreUnico, "_%s", valor);
     } else if (strcmp(tipo, "String") == 0) {
         static int contadorString = 1;
@@ -148,7 +170,7 @@ void agregarConstante(const char* valor, const char* tipo) {
     }
 
     strcpy(tabla[indiceTabla].nombre, nombreUnico);
-    /* guardamos el tipo real para validaciones, aunque la impresiÃ³n muestre "-" */
+    /* guardamos el tipo real para validaciones, aunque la impresion muestre "-" */
     strcpy(tabla[indiceTabla].tipo, tipo);
     strcpy(tabla[indiceTabla].valor, valor);
     if (strcmp(tipo, "String") == 0)
@@ -158,7 +180,6 @@ void agregarConstante(const char* valor, const char* tipo) {
 
     indiceTabla++;
 }
-
 void volcarTabla() {
     FILE *f = fopen("symbol-table.txt", "w");
     if (!f) {
@@ -166,37 +187,34 @@ void volcarTabla() {
         return;
     }
 
-    /* CÃ¡lculo dinÃ¡mico de anchos por contenido */
+    /* Cálculo dinámico de anchos por contenido */
     int anchoNombre = (int)strlen("NOMBRE");
     int anchoTipo   = (int)strlen("TIPO");
     int anchoValor  = (int)strlen("VALOR");
     int anchoLong   = (int)strlen("LONGITUD");
 
-    /* mÃ­nimos agradables */
+    /* Mínimos agradables */
     if (anchoNombre < 30) anchoNombre = 30;
     if (anchoTipo   < 10) anchoTipo   = 10;
     if (anchoValor  < 10) anchoValor  = 10;
     if (anchoLong   < 8)  anchoLong   = 8;
 
+    /* Recalcular anchos dinámicamente según contenido */
     for (int i = 0; i < indiceTabla; i++) {
         int esConst = (tabla[i].valor[0] != '\0');
 
-        char tipoMostrar[20];
-        if (esConst) {
-            if (strcmp(tabla[i].tipo, "Int") == 0) strcpy(tipoMostrar, "CTE_Int");
-            else if (strcmp(tabla[i].tipo, "Float") == 0) strcpy(tipoMostrar, "CTE_Float");
-            else if (strcmp(tabla[i].tipo, "String") == 0) strcpy(tipoMostrar, "CTE_String");
-            else strcpy(tipoMostrar, "-");
-        } else {
-            strcpy(tipoMostrar, "-");
-        }
+        char tipoMostrar[50];
+        if (strcmp(tabla[i].tipo, "-") == 0 || tabla[i].tipo[0] == '\0')
+            strcpy(tipoMostrar, "");
+        else
+            strcpy(tipoMostrar, tabla[i].tipo);
 
         char nombreMostrar[256];
         if (esConst && strcmp(tabla[i].tipo, "String") == 0) {
             nombreConstanteString(tabla[i].valor, nombreMostrar, sizeof(nombreMostrar));
         } else {
-            strncpy(nombreMostrar, tabla[i].nombre, sizeof(nombreMostrar)-1);
-            nombreMostrar[sizeof(nombreMostrar)-1] = '\0';
+            strncpy(nombreMostrar, tabla[i].nombre, sizeof(nombreMostrar) - 1);
+            nombreMostrar[sizeof(nombreMostrar) - 1] = '\0';
         }
 
         char longitudStr[20];
@@ -213,16 +231,17 @@ void volcarTabla() {
         if (lenLong   > anchoLong)   anchoLong   = lenLong;
     }
 
-    /* Separadores entre columnas: mantener 1 entre NOMBRE-TIPO y ampliar entre TIPO-VALOR y VALOR-LONGITUD */
+    /* Separadores entre columnas */
     int sep12 = 1; /* NOMBRE - TIPO */
     int sep23 = 3; /* TIPO   - VALOR */
     int sep34 = 3; /* VALOR  - LONGITUD */
 
     int ancho_total = anchoNombre + sep12 + anchoTipo + sep23 + anchoValor + sep34 + anchoLong;
 
+    /* Encabezado */
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
     fprintf(f, "\n");
-    fprintf(f, "%*s\n", (ancho_total + 30) / 2, "TABLA DE SÃ�MBOLOS - LYC 2025");
+    fprintf(f, "%*s\n", (ancho_total + 30) / 2, "TABLA DE SIMBOLOS - LYC 2025");
     for (int i = 0; i < ancho_total; i++) fprintf(f, "=");
     fprintf(f, "\n\n");
 
@@ -238,39 +257,36 @@ void volcarTabla() {
     for (int i = 0; i < ancho_total; i++) fprintf(f, "-");
     fprintf(f, "\n");
 
+    /* Contenido de la tabla */
     for (int i = 0; i < indiceTabla; i++) {
         int esConst = (tabla[i].valor[0] != '\0');
 
-        char tipoMostrar[20];
-        if (esConst) {
-            if (strcmp(tabla[i].tipo, "Int") == 0) strcpy(tipoMostrar, "CTE_Int");
-            else if (strcmp(tabla[i].tipo, "Float") == 0) strcpy(tipoMostrar, "CTE_Float");
-            else if (strcmp(tabla[i].tipo, "String") == 0) strcpy(tipoMostrar, "CTE_String");
-            else strcpy(tipoMostrar, "-");
-        } else {
-            strcpy(tipoMostrar, "-");
-        }
+        char tipoMostrar[50];
+        if (strcmp(tabla[i].tipo, "-") == 0 || tabla[i].tipo[0] == '\0')
+            strcpy(tipoMostrar, "");
+        else
+            strcpy(tipoMostrar, tabla[i].tipo);
 
         char nombreMostrar[256];
         if (esConst && strcmp(tabla[i].tipo, "String") == 0) {
             nombreConstanteString(tabla[i].valor, nombreMostrar, sizeof(nombreMostrar));
         } else {
-            strncpy(nombreMostrar, tabla[i].nombre, sizeof(nombreMostrar)-1);
-            nombreMostrar[sizeof(nombreMostrar)-1] = '\0';
+            strncpy(nombreMostrar, tabla[i].nombre, sizeof(nombreMostrar) - 1);
+            nombreMostrar[sizeof(nombreMostrar) - 1] = '\0';
         }
 
         char longitudStr[20];
         if (tabla[i].longitud > 0) sprintf(longitudStr, "%d", tabla[i].longitud);
         else strcpy(longitudStr, "-");
 
-    fprintf(f, "%-*s%*s%-*s%*s%-*s%*s%-*s\n",
-        anchoNombre, nombreMostrar,
-        sep12, "",
-        anchoTipo,   tipoMostrar,
-        sep23, "",
-        anchoValor,  esConst ? tabla[i].valor : "",
-        sep34, "",
-        anchoLong,   longitudStr);
+        fprintf(f, "%-*s%*s%-*s%*s%-*s%*s%-*s\n",
+            anchoNombre, nombreMostrar,
+            sep12, "",
+            anchoTipo,   tipoMostrar,
+            sep23, "",
+            anchoValor,  esConst ? tabla[i].valor : "",
+            sep34, "",
+            anchoLong,   longitudStr);
     }
 
     fprintf(f, "\nTotal de entradas: %d\n", indiceTabla);
@@ -278,9 +294,10 @@ void volcarTabla() {
     printf("\n>> symbol-table.txt generado correctamente\n");
 }
 
+
 /* ============================
-   CÃ³digo intermedio: helpers
-   ============================ */
+    Codigo intermedio: helpers
+    ============================ */
 void agregarIntermedio(const char *valor) {
     strcpy(codigoIntermedio[indiceCodigo++], valor);
 }
@@ -304,8 +321,7 @@ void completarSalto(int pos, int destino) {
     strcpy(codigoIntermedio[pos], buf);
 }
 
-
-/* Helpers para volcado de código intermedio */
+/* Helpers para volcado de codigo intermedio */
 static int esOperadorTok(const char* t) {
     const char* ops[] = {"+","-","*","/","%%",":=","READ","WRITE",
                           "BF","BI","==","!=","<",">","<=",">=",
@@ -314,6 +330,7 @@ static int esOperadorTok(const char* t) {
     for (int k=0;k<n;k++) if (strcmp(t, ops[k])==0) return 1;
     return 0;
 }
+
 static int esEtiquetaTok(const char* t) {
     return (t[0]=='E' && t[1]=='T');
 }
@@ -335,22 +352,24 @@ void volcarCodigoIntermedio() {
         return;
     }
 
-    /* fprintf(f, "==============================\n");
-    fprintf(f, "CÃ“DIGO INTERMEDIO - POLACA INVERSA\n");
-    fprintf(f, "==============================\n\n"); */
-    /* Pretty print: instrucciÃ³n por lÃ­nea. Reglas:
-       - ':=', 'READ', 'WRITE' terminan lÃ­nea.
-       - 'BF' y 'BI' consumen la etiqueta siguiente y terminan lÃ­nea.
-       - Etiquetas ET# van en una lÃ­nea sola.
-       - Se agregan comillas a tokens con espacios (strings) para legibilidad. */
+    
+   // fprintf(f, "==============================\n");
+    //fprintf(f, "CÃ“DIGO INTERMEDIO - POLACA INVERSA\n");
+    //fprintf(f, "==============================\n\n");
+    ///* Pretty print: instrucciÃ³n por lÃ­nea. Reglas:
+    //    - ':=', 'READ', 'WRITE' terminan lÃ­nea.
+    //    - 'BF' y 'BI' consumen la etiqueta siguiente y terminan lÃ­nea.
+    //    - Etiquetas ET# van en una lÃ­nea sola.
+     //   - Se agregan comillas a tokens con espacios (strings) para legibilidad. */
     char line[1024];
-    line[0] = '\0';
+    line[0] = '\0'; 
+    
 
     for (int i = 0; i < indiceCodigo; i++) {
         const char* tok = codigoIntermedio[i];
-
         fprintf(f, "[%d] %s\n", i, codigoIntermedio[i]);
         continue;
+
         /* Etiqueta aislada */
         if (esEtiquetaTok(tok)) {
             flush_line(f, line);
@@ -400,8 +419,8 @@ void volcarCodigoIntermedio() {
 }
 
 /* ============================
-   Etiquetas (IF / WHILE)
-   ============================ */
+    Etiquetas (IF / WHILE)
+    ============================ */
 void nuevaEtiqueta(char* out /* >=16 */) {
     sprintf(out, "ET%d", nextEtiqueta++);
 }
@@ -414,24 +433,30 @@ void pop (char pila[][16], int *tope, char* out) {
 }
 
 /* ============================
-   Tipos y validaciones
-   ============================ */
+    Tipos y validaciones
+    ============================ */
 int esNumero(const char* t){ return (strcmp(t,"Int")==0 || strcmp(t,"Float")==0); }
 int esEntero(const char* t){ return strcmp(t,"Int")==0; }
 int esFloat (const char* t){ return strcmp(t,"Float")==0; }
 int esString(const char* t){ return strcmp(t,"String")==0; }
+/* * ==================================
+ * == PASO 4: Añadir helper esDate ==
+ * ==================================
+ */
+int esDate  (const char* t){ return strcmp(t,"Date")==0; }
+
 
 void error_semantico(const char* msg){
     printf("ERROR SEMANTICO: %s\n", msg);
     erroresSemanticos++;
 }
 
-/* combinaciÃ³n de tipos para + - * / */
+/* combinacion de tipos para + - * / */
 void combinarTiposArith(const char* a, const char* b, char* out /*>=10*/, const char* op){
-    if (esString(a) || esString(b)) {
-        /* strings no permitidos en aritmÃ©tica */
+    if (esString(a) || esString(b) || esDate(a) || esDate(b)) {
+        /* strings o fechas no permitidos en aritmética */
         char buf[128];
-        sprintf(buf, "Operador %s no admite String", op);
+        sprintf(buf, "Operador %s no admite String ni Date", op);
         error_semantico(buf);
         strcpy(out, "-");
         return;
@@ -440,6 +465,7 @@ void combinarTiposArith(const char* a, const char* b, char* out /*>=10*/, const 
     else strcpy(out,"Int");
 }
 
+
 /* MOD solo Int */
 void validarMod(const char* a, const char* b){
     if (!(esEntero(a) && esEntero(b))) {
@@ -447,28 +473,35 @@ void validarMod(const char* a, const char* b){
     }
 }
 
-/* ComparaciÃ³n: num con num, o String==String / String!=String */
+/* Comparacion: num con num, o String==String / String!=String */
 void validarComparacion(const char* a, const char* b, const char* op){
     if (esString(a) || esString(b)) {
         if (!(esString(a) && esString(b) && (strcmp(op,"==")==0 || strcmp(op,"!=")==0))) {
             error_semantico("Comparacion con String solo admite == o !=");
         }
+        if (esDate(a) || esDate(b)) {
+        if (!(esDate(a) && esDate(b) && 
+              (strcmp(op,"==")==0 || strcmp(op,"!=")==0))) {
+            error_semantico("Comparacion con Date solo admite == o != entre valores Date");
+        }
+        return;
+    }
     } else if (!(esNumero(a) && esNumero(b))) {
-        error_semantico("Comparacion requiere operandos numericos o ambos String");
+        error_semantico("Error, comparacion Int con Tipo incompatible");
     }
 }
 
 %}
 
 /* ============================
-   Tokens y tipos
-   ============================ */
+    Tokens y tipos
+    ============================ */
 %union {
     char cadena[50];
 }
 
-%token <cadena> CTE_INT CTE_FLOAT CTE_STR
-%token <cadena> DATE
+%token <cadena> CTE_INT CTE_FLOAT CTE_STR DATE
+%token <cadena> CONVDATET 
 %token <cadena> ID
 %token ASIG
 %token SUMA MULT RESTA DIV MOD
@@ -479,14 +512,15 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %token <cadena> INT FLOAT STRING
 %token IGUAL DIST MENOR_IG MAYOR_IG
 %token MENOR MAYOR
+/* Operadores logicos */
 %token AND OR NOT
 %token <cadena> ISZERO CONVDATE
-%token GUION  /* separador '-' dentro de Date */
+%token GUION  /* separador '-' dentro de convDate */
 %token COMA PYC PUNTO
 
 /* Precedencias para resolver conflictos */
-%nonassoc IFX
 %nonassoc ELSE
+%nonassoc IFX
 %left OR
 %left AND
 %right NOT
@@ -498,8 +532,8 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %%
 
 /* ============================
-   Reglas SintÃ¡cticas
-   ============================ */
+    Reglas Sintacticas
+    ============================ */
 
 programa:
     lista_sentencias  { printf(" FIN\n"); }
@@ -516,48 +550,80 @@ sentencia:
   | iteracion
   | declaracion
   | io
-  | condicion
 ;
 
-/* ---------- AsignaciÃ³n ---------- */
+/* ---------- Asignacion ---------- */
 asignacion:
     ID ASIG expresion PYC {
         if (!existeSimbolo($1)) {
             printf("ADVERTENCIA: Variable '%s' no declarada con INIT\n", $1);
             agregarVariable($1);
         }
-        /* Chequeo de tipos: si la var tiene tipo y la expr tambiÃ©n, deben ser compatibles */
+
+        /* ============================
+           Chequeo de compatibilidad de tipos
+           ============================ */
         const char* tvar = getTipoSimbolo($1);
         const char* texp = $3;
-        if (strcmp(tvar,"-")!=0 && strcmp(texp,"-")!=0) {
+
+        if (strcmp(tvar, "-") != 0 && strcmp(texp, "-") != 0) {
+
+            /* --- STRING vs NUMÉRICO --- */
             if (esString(tvar) != esString(texp)) {
                 error_semantico("Asignacion de tipo incompatible (String vs numerico)");
             }
+
+            /* --- DATE vs NUMÉRICO --- */
+            else if (esDate(tvar) && !esDate(texp)) {
+                char msg[128];
+                sprintf(msg, "Asignacion de tipo incompatible: se esperaba Date pero se recibio %s", texp);
+                error_semantico(msg);
+            }
+            else if (!esDate(tvar) && esDate(texp)) {
+                char msg[128];
+                sprintf(msg, "Asignacion de tipo incompatible: no se puede asignar un Date a una variable tipo %s", tvar);
+                error_semantico(msg);
+            }
+
+            /* --- DATE vs STRING --- */
+            else if (esDate(tvar) && esString(texp)) {
+                error_semantico("Asignacion de tipo incompatible: no se puede asignar un String a un Date");
+            }
+            else if (esString(tvar) && esDate(texp)) {
+                error_semantico("Asignacion de tipo incompatible: no se puede asignar un Date a un String");
+            }
+            
+    
         }
-        /* GeneraciÃ³n PI: <expr> ID := */
+
+        /* ============================
+           Generación de código intermedio
+           ============================ */
         agregarIntermedio($1);
         agregarIntermedio(":=");
-        printf("    ID := Expresion es ASIGNACION\n");
+        printf("     ID := Expresion es ASIGNACION\n");
     }
+
 ;
 
-/* ---------- Expresiones aritmÃ©ticas ---------- */
+
+/* ---------- Expresiones aritmetricas ---------- */
 expresion:
-    termino                  { printf("    Termino es Expresion\n"); strcpy($$, $1); }
+    termino             { printf("     Termino es Expresion\n"); strcpy($$, $1); }
   | expresion SUMA termino   {
         agregarIntermedio("+");
         combinarTiposArith($1,$3,$$,"+");
-        printf("    Expresion+Termino es Expresion\n");
+        printf("     Expresion+Termino es Expresion\n");
     }
   | expresion RESTA termino  {
         agregarIntermedio("-");
         combinarTiposArith($1,$3,$$,"-");
-        printf("    Expresion-Termino es Expresion\n");
+        printf("     Expresion-Termino es Expresion\n");
     }
 ;
 
 termino:
-    factor                 { printf("    Factor es Termino\n"); strcpy($$, $1); }
+    factor             { printf("     Factor es Termino\n"); strcpy($$, $1); }
   | termino MULT factor    {
         agregarIntermedio("*");
         combinarTiposArith($1,$3,$$,"*");
@@ -581,39 +647,54 @@ factor:
             agregarVariable($1); /* para no cascaderizar errores */
         }
         agregarIntermedio($1);
-        strcpy($$, getTipoSimbolo($1)); /* puede ser "-" si no tipada aÃºn */
-        printf("    ID es Factor\n");
-        printf("    ID es Factor\n");
+        strcpy($$, getTipoSimbolo($1)); /* puede ser "-" si no tipada aun */
+        printf("     ID es Factor\n");
+        printf("     ID es Factor\n");
     }
   | CTE_INT {
         agregarConstante($1, "Int");
         agregarIntermedio($1);
         strcpy($$, "Int");
-        printf("    CTE es Factor\n");
+        printf("     CTE es Factor\n");
     }
   | CTE_FLOAT {
         agregarConstante($1, "Float");
         agregarIntermedio($1);
         strcpy($$, "Float");
-        printf("    CTE es Factor\n");
+        printf("     CTE es Factor\n");
     }
   | CTE_STR {
         agregarConstante($1, "String");
         agregarIntermedio($1);
         strcpy($$, "String");
-        printf("    CTE es Factor\n");
+        printf("     CTE es Factor\n");
     }
   | PAR_IZQ expresion PAR_DER { 
-  		strcpy($$, $2); 
-  		printf("    Expresion entre parentesis es Factor\n"); 
-  	}
-  | CONVDATE PAR_IZQ DATE PAR_DER {
-        /* d m a ya quedaron en PI por las reglas de expresion -> agrego operador */
-        agregarConstante($3, "String");
-        agregarIntermedio("DATE");
+        strcpy($$, $2); 
+        printf("     Expresion entre parentesis es Factor\n"); 
+    }
  
-        strcpy($$, "String");
-        printf("    convDate(DATE) es Factor\n");
+  | CONVDATE PAR_IZQ CONVDATET PAR_DER {
+        /* === ACCIÓN SEMÁNTICA REEMPLAZADA === */
+        
+        // 1. Llama al "cerebro" con el string "21-08-2025"
+        int valorFechaNum = convertirFechaYYYYMMDD($3); // $3 es "21-08-2025"
+
+        // 2. Convierte el resultado (20250821) de nuevo a un string
+        char valorFechaStr[20];
+        sprintf(valorFechaStr, "%d", valorFechaNum);
+
+        // 3. Agrega "20250821" a la Tabla de Símbolos como tipo "Date"
+        //    (Gracias al PASO 3, se guardará como:
+        //     NOMBRE: _20250821, TIPO: Date, VALOR: 20250821)
+        agregarConstante(valorFechaStr, "Date");
+
+        // 4. Pone el valor "20250821" en la Polaca Inversa
+        agregarIntermedio(valorFechaStr);
+
+        // 5. El tipo de esta expresión (el factor) es "Date"
+        strcpy($$, "Date");
+        printf("     convDate(CONVDATET) es Factor (tipo Date)\n");
     }
 ;
 
@@ -621,52 +702,42 @@ factor:
 condicion:
     comparacion { strcpy($$, $1); }
 
-    | condicion AND condicion {
+  | condicion AND condicion {
         printf("    Condicion AND Condicion es Condicion\n");
         strcpy($$, "Int");
     }
 
-
-    | condicion m_or OR condicion {
-        int f2 = popSalto();  // falso de la 2da
-        int f1 = popSalto();  // falso de la 1ra
-
-        // completamos el falso de la primera para que apunte al inicio de la 2da
+  | condicion  OR m_or condicion {
+        int f2 = popSalto();
+        int f1 = popSalto();
         completarSalto(f1, indiceCodigo);
-
-        // el falso general del OR será el de la segunda
         pushSalto(f2);
-
         printf("    Condicion OR Condicion es Condicion\n");
         strcpy($$, "Int");
     }
 
-
-
-
-    | NOT condicion {
-            // Invierte el operador de salto anterior
-            int pos = popSalto();
-            char *op = codigoIntermedio[pos - 1];
-            if      (strcmp(op,"BGE")==0) strcpy(codigoIntermedio[pos-1],"BLT");
-            else if (strcmp(op,"BLE")==0) strcpy(codigoIntermedio[pos-1],"BGT");
-            else if (strcmp(op,"BGT")==0) strcpy(codigoIntermedio[pos-1],"BLE");
-            else if (strcmp(op,"BLT")==0) strcpy(codigoIntermedio[pos-1],"BGE");
-            else if (strcmp(op,"BEQ")==0) strcpy(codigoIntermedio[pos-1],"BNE");
-            else if (strcmp(op,"BNE")==0) strcpy(codigoIntermedio[pos-1],"BEQ");
-            pushSalto(pos);
-            printf("    NOT Condicion es Condicion\n");
-            strcpy($$, "Int");
+  | NOT condicion {
+        int pos = popSalto();
+        char *op = codigoIntermedio[pos - 1];
+        if      (strcmp(op,"BGE")==0) strcpy(codigoIntermedio[pos-1],"BLT");
+        else if (strcmp(op,"BLE")==0) strcpy(codigoIntermedio[pos-1],"BGT");
+        else if (strcmp(op,"BGT")==0) strcpy(codigoIntermedio[pos-1],"BLE");
+        else if (strcmp(op,"BLT")==0) strcpy(codigoIntermedio[pos-1],"BGE");
+        else if (strcmp(op,"BEQ")==0) strcpy(codigoIntermedio[pos-1],"BNE");
+        else if (strcmp(op,"BNE")==0) strcpy(codigoIntermedio[pos-1],"BEQ");
+        pushSalto(pos);
+        printf("    NOT Condicion es Condicion\n");
+        strcpy($$, "Int");
     }
 
-    | ISZERO PAR_IZQ expresion PAR_DER {
-            agregarIntermedio("0");
-            agregarIntermedio("CMP");
-            agregarIntermedio("BNE");
-            int p = reservarSalto();
-            pushSalto(p);
-            strcpy($$, "Int");
-            printf("    ISZERO(Expresion) es Condicion\n");
+  | ISZERO PAR_IZQ expresion PAR_DER {
+        agregarIntermedio("0");
+        agregarIntermedio("CMP");
+        agregarIntermedio("BNE");
+        int p = reservarSalto();
+        pushSalto(p);
+        strcpy($$, "Int");
+        printf("    ISZERO(Expresion) es Condicion\n");
     }
 ;
 
@@ -827,14 +898,15 @@ n_while:
     }
 ;
 
+
 /* ---------- Bloques ---------- */
 bloque:
-    LLA_IZQ lista_sentencias LLA_DER { printf("    {Lista_sentencias} es Bloque\n"); }
+    LLA_IZQ lista_sentencias LLA_DER { printf("     {Lista_sentencias} es Bloque\n"); }
 ;
 
 /* ---------- Declaraciones ---------- */
 declaracion:
-    INIT LLA_IZQ lista_declaraciones LLA_DER { printf("    INIT{Lista_declaraciones} es Declaracion\n"); }
+    INIT LLA_IZQ lista_declaraciones LLA_DER { printf("     INIT{Lista_declaraciones} es Declaracion\n"); }
 ;
 
 lista_declaraciones:
@@ -855,7 +927,7 @@ declaracion_tipo:
             setTipoSimbolo(id, $3); /* guardamos tipo real para validar */
         }
         cantIdsPendientes = 0;
-        printf("    Lista_ids:Tipo; es Declaracion_tipo\n");
+        printf("     Lista_ids:Tipo; es Declaracion_tipo\n");
     }
 ;
 
@@ -868,6 +940,7 @@ tipo:
     INT    { strcpy($$, "Int"); }
   | FLOAT  { strcpy($$, "Float"); }
   | STRING { strcpy($$, "String"); }
+  | DATE   { strcpy($$, "Date"); }
 ;
 
 /* ---------- Entrada / Salida ---------- */
@@ -880,20 +953,20 @@ io:
         }
         agregarIntermedio($3);
         agregarIntermedio("READ");
-        printf("    READ(ID) es IO\n");
+        printf("     READ(ID) es IO\n");
     }
   | WRITE PAR_IZQ expresion PAR_DER PYC {
         /* String, Int o Float, todos vÃ¡lidos */
         agregarIntermedio("WRITE");
-        printf("    WRITE(Expresion) es IO\n");
+        printf("     WRITE(Expresion) es IO\n");
     }
 ;
 
 %%
 
 /* ============================
-   Funciones auxiliares
-   ============================ */
+    Funciones auxiliares
+    ============================ */
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Uso: %s <archivo_prueba>\n", argv[0]);
@@ -905,14 +978,16 @@ int main(int argc, char *argv[]) {
         yyparse();
         fclose(yyin);
     }
-    volcarTabla();
-    volcarCodigoIntermedio();
+
 
     if (erroresSemanticos) {
-        printf("\nCompilacion completa con ERRORES SEMANTICOS (%d)\n", erroresSemanticos);
+        printf("\nCompilacion con ERRORES SEMANTICOS (%d)\n", erroresSemanticos);
         return 2;
     } else {
         printf("\nCompilacion semantica OK\n");
+
+        volcarTabla();
+        volcarCodigoIntermedio();
         return 0;
     }
 }

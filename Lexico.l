@@ -6,9 +6,7 @@
 extern FILE *yyin;
 int yyerror(void);
 
-/* Contexto para convDate: dentro de sus paréntesis tratamos '-' como separador */
-static int inConvDate = 0;
-static int convDepth = 0;
+
 %}
 
 %option noyywrap
@@ -16,7 +14,8 @@ static int convDepth = 0;
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-DATE		({DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}"-"{DIGITO}{DIGITO}{DIGITO}{DIGITO})
+/* Esta es la definición de nuestro token de fecha */
+CONVDATET   ({DIGITO}{1,2}"-"{DIGITO}{1,2}"-"{DIGITO}{4})
 CTE_INT     -?{DIGITO}+
 CTE_FLOAT   -?({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
 ID          {LETRA}({LETRA}|{DIGITO})*
@@ -31,10 +30,10 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 "write"         { return WRITE; }
 "Int"           { return INT; }
 "Float"         { return FLOAT; }
-"Date"			{ return DATE; }
+"Date"          { return DATE; }
 "String"        { return STRING; }
 "isZero"        { return ISZERO; }
-"convDate"      { inConvDate = 1; convDepth = 0; return CONVDATE; }
+"convDate"      { return CONVDATE; } 
 "AND"           { return AND; }
 "OR"            { return OR; }
 "NOT"           { return NOT; }
@@ -52,13 +51,13 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 ">"             { return MAYOR; }
 
 "+"             { return SUMA; }
-"-"             { return inConvDate ? GUION : RESTA; }
+"-"             { return RESTA; } 
 "*"             { return MULT; }
 "/"             { return DIV; }
 "%"             { return MOD; }
 
-"("             { if (inConvDate) convDepth++; return PAR_IZQ; }
-")"             { if (inConvDate && --convDepth <= 0) { inConvDate = 0; convDepth = 0; } return PAR_DER; }
+"("             { return PAR_IZQ; } 
+")"             { return PAR_DER; } 
 "{"             { return LLA_IZQ; }
 "}"             { return LLA_DER; }
 "["             { return COR_IZQ; }
@@ -68,68 +67,60 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 ";"             { return PYC; }
 "."             { return PUNTO; }
 
-"#\+"([^#\n])*"\+#"   { /* ignorar comentario */ }
+
+#\+([-a-zA-Z0-9 _.,;:!¡¿?='"()<>/*+=:%{}\[\]]*)\+#
+#\+([^#\n]*)                                    { printf("ERROR LEXICO: comentario sin cierre +# en linea %d\n", yylineno); exit(1); }
+#\+([^a-zA-Z0-9 _.,;:!¡¿?='"()/*+\-=: \n#][^#\n]*)\+# { printf("ERROR LEXICO: comentario contiene caracteres inválidos en línea %d\n", yylineno); exit(1); }
+
+
+
 
 {CTE_INT} {
     long v = atol(yytext);
-
     /* Int de 16 bits con signo: rango -32768 a 32767 */
     if (v > 32767 || v < -32768) {
         printf("ERROR LEXICO: Constante entera fuera de rango (Int 16 bits): %s\n", yytext);
         exit(1);
     }
-
-    printf("\nConstante Entera (Int 16 bits): %s\n", yytext);
+    /* No imprimas aquí, es mejor hacerlo en el parser
+       printf("\nConstante Entera (Int 16 bits): %s\n", yytext); */
     strcpy(yylval.cadena, yytext);
     return CTE_INT;
 }
 
 {CTE_FLOAT} {
-    /* Float IEEE 754 simple precisión (aprox. ±3.4E38) */
     double val = atof(yytext);
-
     if (val > 3.4e38 || val < -3.4e38) {
         printf("ERROR LEXICO: Constante flotante fuera de rango (Float 32 bits): %s\n", yytext);
         exit(1);
     }
-
-    /* Validar formato: separador decimal debe ser '.' */
     if (strchr(yytext, ',') != NULL) {
         printf("ERROR LEXICO: separador decimal inválido, use '.' en lugar de ',' (%s)\n", yytext);
         exit(1);
     }
-
-    printf("\nConstante Real (Float 32 bits): %s\n", yytext);
+    /* No imprimas aquí
+       printf("\nConstante Real (Float 32 bits): %s\n", yytext); */
     strcpy(yylval.cadena, yytext);
     return CTE_FLOAT;
 }
 
-{DATE} {
+{CONVDATET} {
     /* Validar formato: debe tener el formato DD-MM-YYYY */
+    /* (Mejoré tu sscanf para permitir 1 o 2 dígitos en día/mes) */
     int d, m, y;
-	sscanf(yytext, "%2d-%2d-%4d", &d, &m, &y);
-    printf("\nDia: %d", d);
-    printf("\nMes: %d", m);
-    printf("\nA�o: %d", y);
-	int diaMax = 28;
-	if (m == 1 || m == 3 || m == 5 || m == 7 || m == 8 || m == 10 || m == 12) {
-		diaMax = 31;
-	}
-	if (m == 4 || m == 6 || m == 9 || m == 11) {
-		diaMax = 30;
-	}
-	if (m == 2 && ((y % 4 == 0) && (y % 100 != 0 || y % 400 == 0)) ) {
-		diaMax = 29;
-	}
-	if (d < 1 || d > diaMax || m < 1 || m > 12) {
-    	printf("\nERROR LEXICO: Fecha invalida (%s)\n", yytext);
-    	exit(1);
-	}
+    if (sscanf(yytext, "%d-%d-%d", &d, &m, &y) != 3 || y < 1000) {
+        printf("ERROR LEXICO: Fecha debe tener formato DD-MM-YYYY (%s)\n", yytext);
+        exit(1);
+    }
+    if (d < 1 || d > 31 || m < 1 || m > 12) {
+        printf("ERROR LEXICO: Fecha invalida (dia o mes fuera de rango): %s\n", yytext);
+        exit(1);
+    }
 
-    printf("\nFecha convertida: %d%d%d\n", y, m, d);
-    printf("\nConvdate (Convdate 32 bits): %s\n", yytext);
+    /* No imprimas aquí
+       printf("\nConvdate (Convdate 32 bits): %s\n", yytext); */
     strcpy(yylval.cadena, yytext);
-    return DATE;
+    return CONVDATET;
 }
 
 
@@ -148,12 +139,14 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 
 {ID} {
     if(strlen(yytext)>30){ printf("ERROR LEXICO: id largo\n"); exit(1); }
-    printf("\nID detectado: %s\n", yytext);
+    /* No imprimas aquí
+       printf("\nID detectado: %s\n", yytext); */
     strcpy(yylval.cadena, yytext);
     return ID;
 }
 
-[ \t\r\n]+    { }
-.             { printf("ERROR LEXICO: %s\n", yytext); exit(1); }
+[ \t\r\n]+    { /* Ignorar whitespace */ }
+.             { printf("ERROR LEXICO: Caracter no reconocido '%s' en linea %d\n", yytext, yylineno); exit(1); }
 
 %%
+
