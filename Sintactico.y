@@ -60,11 +60,6 @@ int topeNivelesIf = -1;
 int nivelWhile[MAX_POLACA];
 int topeNivelesWhile = -1;
 
-int popSalto() {
-    int pos = pilaSaltos[topePilaSaltos--];
-    printf("POP: pos=%d newTope=%d\n", pos, topePilaSaltos);
-    return pos;
-}
 int cantSaltos() { return topePilaSaltos + 1; }
 
 void pushNivelIf() {
@@ -79,9 +74,20 @@ int popNivelIf() {
 
 // --- WHILE ---
 
-void pushNivelWhile() {
-    nivelWhile[++topeNivelesWhile] = topePilaSaltos;
-    printf("PUSHNIVEL_WHILE: nivel=%d topeSaltos=%d\n", topeNivelesWhile, topePilaSaltos);
+typedef struct { int limitePilaSaltos; int posInicio; } NivelWhile;
+NivelWhile pilaNivelWhile[MAX_POLACA];
+int topeNivelWhile = -1;
+
+void pushNivelWhile(int posInicio) {
+    pilaNivelWhile[++topeNivelWhile].limitePilaSaltos = topePilaSaltos;
+    pilaNivelWhile[topeNivelWhile].posInicio = posInicio;
+    printf("PUSHNIVEL_WHILE: nivel=%d posInicio=%d topeSaltos=%d\n", topeNivelWhile, posInicio, topePilaSaltos);
+}
+
+NivelWhile popNivelWhileStruct() {
+    NivelWhile v = pilaNivelWhile[topeNivelWhile--];
+    printf("POPNIVEL_WHILE: devolviendo posInicio=%d limite=%d nuevoTopeNivel=%d\n", v.posInicio, v.limitePilaSaltos, topeNivelWhile);
+    return v;
 }
 
 int popNivelWhile() {
@@ -89,6 +95,62 @@ int popNivelWhile() {
     printf("POPNIVEL_WHILE: devolviendo v=%d nuevoTopeNivel=%d\n", v, topeNivelesWhile);
     return v;
 }
+
+
+
+
+
+
+// Agregar un token (string) al codigo intermedio; actualiza indiceCodigo
+void agregarIntermedio(const char *valor) {
+    strcpy(codigoIntermedio[indiceCodigo++], valor);
+}
+
+// Agregar un entero como token (convierte a string)
+void agregarIntermedioInt(int valor) {
+    char buf[32];
+    sprintf(buf, "%d", valor);
+    agregarIntermedio(buf);
+}
+
+// Reservar un espacio "_" y devolver su posición (no hace push)
+int reservarSalto() {
+    agregarIntermedio("_");
+    int pos = indiceCodigo - 1;
+    printf("RESERVAR: pos=%d\n", pos);
+    return pos;
+}
+
+// Push/Pop en la pila de saltos
+void pushSalto(int pos) {
+    pilaSaltos[++topePilaSaltos] = pos;
+    printf("PUSH: pos=%d tope=%d\n", pos, topePilaSaltos);
+}
+
+int popSalto() {
+    if (topePilaSaltos < 0) {
+        printf("POP: pila vacia! tope=%d\n", topePilaSaltos);
+        return -1;
+    }
+    int pos = pilaSaltos[topePilaSaltos--];
+    printf("POP: pos=%d newTope=%d\n", pos, topePilaSaltos);
+    return pos;
+}
+
+// Completar salto: sustituye "_" por el número 'destino'
+void completarSalto(int pos, int destino) {
+    if (pos < 0 || pos >= MAX_POLACA) {
+        printf("COMPLETAR: pos fuera de rango pos=%d destino=%d\n", pos, destino);
+        return;
+    }
+    char buf[32];
+    sprintf(buf, "%d", destino);
+    strcpy(codigoIntermedio[pos], buf);
+    printf("COMPLETAR: pos=%d destino=%d\n", pos, destino);
+}
+
+
+
 
 
 
@@ -298,28 +360,7 @@ void volcarTabla() {
 /* ============================
     Codigo intermedio: helpers
     ============================ */
-void agregarIntermedio(const char *valor) {
-    strcpy(codigoIntermedio[indiceCodigo++], valor);
-}
 
-int reservarSalto() {
-    agregarIntermedio("_");
-    int pos = indiceCodigo - 1;
-    printf("RESERVAR: pos=%d\n", pos);
-    return pos;
-}
-
-void pushSalto(int pos) {
-    pilaSaltos[++topePilaSaltos] = pos;
-    printf("PUSH: pos=%d tope=%d\n", pos, topePilaSaltos);
-}
-
-void completarSalto(int pos, int destino) {
-    char buf[32];
-    sprintf(buf, "%d", destino);
-    printf("COMPLETAR: pos=%d destino=%d\n", pos, destino);
-    strcpy(codigoIntermedio[pos], buf);
-}
 
 /* Helpers para volcado de codigo intermedio */
 static int esOperadorTok(const char* t) {
@@ -888,45 +929,55 @@ n_ifelse:
 
 
 /* ---------- While ---------- */
-/* while (cond) {bloque} =>
-   ETini  <cond> BF ETfin  <bloque> BI ETini  ETfin */
+/* Producción principal del while */
 iteracion:
     WHILE m_while_i PAR_IZQ condicion PAR_DER m_while_b bloque n_while
 ;
 
+/* m_while_i: marca inicio del while (guardar inicio y nivel) */
 m_while_i:
-    {
-        // Marca el inicio del while
-        pushNivelWhile();
-        popSalto(indiceCodigo);
-        printf("m_while: inicio del WHILE en %d\n", indiceCodigo);
-    }
+{
+    // --- INICIO DEL WHILE ---
+    int posInicio = indiceCodigo; // guardamos la posición de inicio
+    pushNivelWhile(posInicio);    // ahora le pasamos el índice de inicio
+    printf("m_while: inicio del WHILE en %d\n", posInicio);
+}
 ;
 
+/* m_while_b: reservar salto falso para la condición (se ejecuta justo después de ']') */
 m_while_b:
-    {
-        // Reservar salto al final del while (condición falsa)
-        int posSaltoFalso = reservarSalto();
-        pushSalto(posSaltoFalso);
-        printf("m_cwhile: salto falso reservado en %d\n", posSaltoFalso);
+    /* empty */ {
+        // La condición (comparacion) debe haber agregado CMP y Bxx y hecho reservarSalto() y pushSalto()
+        // Si tu comparacion no hace pushSalto, hacelo aquí. Ideal: la comparacion hace reservar+push.
+        // No reserves aquí si la comparacion ya reservó el salto.
+        printf("m_while_b: topePilaSaltos=%d\n", topePilaSaltos);
     }
 ;
 
+/* n_while: finalizar while: completar salto falso y generar BI vuelta a inicio */
 n_while:
-    {
-        printf("n_while ejecutada\n");
-        int limite = popNivelWhile();
-        printf("n_while: limite=%d topeSaltos=%d\n", limite, topePilaSaltos);
+  /* empty */ {
+      NivelWhile nivel = popNivelWhileStruct();
+      int fin = indiceCodigo;
 
-        while (topePilaSaltos >= limite) {
-            int posSaltoFalso = popSalto();
-            printf("n_while: completando salto en %d -> %d\n", posSaltoFalso, indiceCodigo);
-            completarSalto(posSaltoFalso, indiceCodigo);
-        }
+      int falso = popSalto(); // debe devolver la reserva hecha por la condicion
+      completarSalto(falso, fin + 2);
 
+      // Generar BI al inicio
+      agregarIntermedio("BI");
+      agregarIntermedioInt(nivel.posInicio);
 
-    }
+      // Si quedaron otros saltos generados dentro del while y fuera del alcance, completalos hasta limite:
+      while (topePilaSaltos > nivel.limitePilaSaltos) {
+          int pos = popSalto();
+          completarSalto(pos, indiceCodigo);
+      }
+
+      printf("n_while: completado falso=%d->%d, BI a %d\n", falso, fin, nivel.posInicio);
+  }
 ;
+
+
 
 
 /* ---------- Bloques ---------- */

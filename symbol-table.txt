@@ -1,22 +1,24 @@
-=================================================================
-                   TABLA DE SIMBOLOS - LYC 2025
-=================================================================
+======================================================================
+                      TABLA DE SIMBOLOS - LYC 2025
+======================================================================
 
-NOMBRE                         TIPO         VALOR        LONGITUD
------------------------------------------------------------------
-a                              Int                       -       
-b                              Int                       -       
-e                              Int                       -       
-f                              Int                       -       
-g                              Int                       -       
-h                              Int                       -       
-c                              Float                     -       
-d                              Float                     -       
-i                              Float                     -       
-j                              Float                     -       
-nombre                         String                    -       
-apellido                       String                    -       
-fecha                          Date                      -       
-_20250821                      Date         20250821     -       
+NOMBRE                         TIPO         VALOR             LONGITUD
+----------------------------------------------------------------------
+a                              Int                            -       
+b                              Int                            -       
+e                              Int                            -       
+f                              Int                            -       
+g                              Int                            -       
+h                              Int                            -       
+c                              Float                          -       
+d                              Float                          -       
+i                              Float                          -       
+j                              Float                          -       
+nombre                         String                         -       
+apellido                       String                         -       
+fecha                          Date                           -       
+_10                            Int          10                -       
+_Incrementando_a               String       Incrementando a   15      
+_1                             Int          1                 -       
 
-Total de entradas: 14
+Total de entradas: 16

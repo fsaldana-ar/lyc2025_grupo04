@@ -6,59 +6,18 @@ init {
     fecha : Date;
 }
 
+#+ ===== While con ciclo anidado ===== +#
+while (a < 10) {
+    write("Incrementando a");
+    a := a + 1;
+}
 
 
-#+ ===== Tema especial: convDate ===== +#
-fecha := convDate(31-14-2025);
-write(fecha);
-
-
-
-#+ =================================================================== +#
-#+ ===== Casos de error lexico/sintactico (comentados) ============= +#
-#+ =================================================================== +#
-
-#+ ERROR: Identificador demasiado largo, deberia fallar +#
-#+ variableconnombreexcesivamentelargoquedebefallar := 1; +#
-
-#+ ERROR: Constante fuera de rango, deberia fallar +#
-#+ a := 40000; +#
-
-#+ ERROR: String demasiado largo, deberia fallar +#
-#+ write("Este string es demasiado largo y deberia dar error porque supera los cincuenta caracteres permitidos por el lenguaje"); +#
-
-
-#+ ================================== +#
-#+ ===== VALIDACIONES SEMANTICAS ==== +#
-#+ ================================= +#
-
-#+ 1 Error Variable ya declarada +#
-#+ init { a : Int; } +#
-
-
-#+ 2 Error Asignacion de tipo incompatible (id := constante) +#
-#+ a := "Esto es un string"; +#
-#+ nombre := 123; +#
-
-
-
-#+ 3 Error Asignacion de tipo incompatible (id := id) +#
-#+ a := nombre; +#
-#+ fecha := a; +#
-#+ fecha := 12.4; +#
-
-#+ 4 Error Uso de variable no declarada +#
-#+ variablenodeclarada := 10; +#
-#+ write(variablenodeclarada2); +#
-
-
-#+ 5 Error Comparacion de tipos incompatibles +#
-#+ if (a > nombre) { write("Error"); } +#
-#+if (fecha == a) { write("Error"); }  +#
-#+ if (nombre != c) { write("Error"); } +#
-
-
-#+ 6 Error Operacion aritmetica con tipos no numericos +#
-#+ a := a + nombre; +#
-#+ a := 10 * fecha; +#
-#+ a := 5 % nombre; +#
+while (a < 10) {
+    write("Incrementando a");
+    a := a + 1;
+    while (a < 10) {
+        write("Incrementando a");
+        a := a + 1;
+    }
+}

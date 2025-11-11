@@ -1,6 +1,43 @@
-[0] 20250821
-[1] fecha
-[2] :=
-[3] fecha
-[4] WRITE
-Total de elementos: 5
+[0] a
+[1] 10
+[2] CMP
+[3] BGE
+[4] 14
+[5] Incrementando a
+[6] WRITE
+[7] a
+[8] 1
+[9] +
+[10] a
+[11] :=
+[12] BI
+[13] 0
+[14] a
+[15] 10
+[16] CMP
+[17] BGE
+[18] 42
+[19] Incrementando a
+[20] WRITE
+[21] a
+[22] 1
+[23] +
+[24] a
+[25] :=
+[26] a
+[27] 10
+[28] CMP
+[29] BGE
+[30] 40
+[31] Incrementando a
+[32] WRITE
+[33] a
+[34] 1
+[35] +
+[36] a
+[37] :=
+[38] BI
+[39] 26
+[40] BI
+[41] 14
+Total de elementos: 42
