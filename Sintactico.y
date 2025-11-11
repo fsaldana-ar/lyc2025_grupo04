@@ -40,15 +40,25 @@ char pilaEnd [100][16]; int topeEnd  = -1;
 char pilaIni [100][16]; int topeIni  = -1;
 char pilaFin [100][16]; int topeFin  = -1;
 
-int pilaNivelesIf[MAX_POLACA];
+int nivelIf[MAX_POLACA];
 int topeNivelesIf = -1;
 
-void pushSalto(int pos) { pilaSaltos[++topePilaSaltos] = pos; }
-int popSalto() { return pilaSaltos[topePilaSaltos--]; }
+int popSalto() {
+    int pos = pilaSaltos[topePilaSaltos--];
+    printf("POP: pos=%d newTope=%d\n", pos, topePilaSaltos);
+    return pos;
+}
 int cantSaltos() { return topePilaSaltos + 1; }
 
-void pushNivelIf() { pilaNivelesIf[++topeNivelesIf] = topePilaSaltos; }
-int popNivelIf() { return pilaNivelesIf[topeNivelesIf--]; }
+void pushNivelIf() {
+    nivelIf[++topeNivelesIf] = topePilaSaltos;
+    printf("PUSHNIVEL: nivel=%d topeSaltos=%d\n", topeNivelesIf, topePilaSaltos);
+}
+int popNivelIf() {
+    int v = nivelIf[topeNivelesIf--];
+    printf("POPNIVEL: devolviendo v=%d nuevoTopeNivel=%d\n", v, topeNivelesIf);
+    return v;
+}
 
 
 /* BÃºsqueda en tabla de sÃ­mbolos */
@@ -261,12 +271,23 @@ void agregarIntermedio(const char *valor) {
 
 int reservarSalto() {
     agregarIntermedio("_");
-    return indiceCodigo - 1;
+    int pos = indiceCodigo - 1;
+    printf("RESERVAR: pos=%d\n", pos);
+    return pos;
+}
+
+void pushSalto(int pos) {
+    pilaSaltos[++topePilaSaltos] = pos;
+    printf("PUSH: pos=%d tope=%d\n", pos, topePilaSaltos);
 }
 
 void completarSalto(int pos, int destino) {
-    sprintf(codigoIntermedio[pos], "%d", destino);
+    char buf[32];
+    sprintf(buf, "%d", destino);
+    printf("COMPLETAR: pos=%d destino=%d\n", pos, destino);
+    strcpy(codigoIntermedio[pos], buf);
 }
+
 
 /* Helpers para volcado de código intermedio */
 static int esOperadorTok(const char* t) {
@@ -448,8 +469,8 @@ void validarComparacion(const char* a, const char* b, const char* op){
 %token COMA PYC PUNTO
 
 /* Precedencias para resolver conflictos */
-%nonassoc ELSE
 %nonassoc IFX
+%nonassoc ELSE
 %left OR
 %left AND
 %right NOT
@@ -582,27 +603,30 @@ factor:
 
 /* ---------- Condiciones ---------- */
 condicion:
-      comparacion { strcpy($$, $1); }
+    comparacion { strcpy($$, $1); }
 
     | condicion AND condicion {
-        // En un AND, ambos falsos deben saltar al mismo lugar
-        int pos2 = popSalto(); // salto falso de la segunda condición
-        int pos1 = popSalto(); // salto falso de la primera condición
-
         printf("    Condicion AND Condicion es Condicion\n");
         strcpy($$, "Int");
     }
 
-    
 
-    | condicion OR condicion {
-            // Si la primera es verdadera → salta al final del OR
-            int pos = popSalto();
-            agregarIntermedio("BI");
-            completarSalto(pos, indiceCodigo);
-            printf("    Condicion OR Condicion es Condicion\n");
-            strcpy($$, "Int");
+    | condicion m_or OR condicion {
+        int f2 = popSalto();  // falso de la 2da
+        int f1 = popSalto();  // falso de la 1ra
+
+        // completamos el falso de la primera para que apunte al inicio de la 2da
+        completarSalto(f1, indiceCodigo);
+
+        // el falso general del OR será el de la segunda
+        pushSalto(f2);
+
+        printf("    Condicion OR Condicion es Condicion\n");
+        strcpy($$, "Int");
     }
+
+
+
 
     | NOT condicion {
             // Invierte el operador de salto anterior
@@ -682,35 +706,12 @@ comparacion:
     }
 ;
 
-condicion_fin:
-    /* empty */ {
-        while (topeSaltos >= 0) {
-            int pos = popSalto();
-            completarSalto(pos, indiceCodigo);
-        }
-    }
-;
-
-if_sentencia:
-    IF PAR_IZQ condicion PAR_DER condicion_fin bloque if_fin
-;
-
-if_fin:
-    /* empty */ {
-        int pos = popSalto();
-        completarSalto(pos, indiceCodigo);
-    }
-;
-
-/* ---------- If / If-Else ---------- */
 /* ---------- If / If-Else ---------- */
 seleccion:
-    /* IF (cond) {bloque}  =>  <cond> BF idxElse  <bloque>  idxElse */
-    IF PAR_IZQ condicion PAR_DER m_if bloque n_if %prec IFX
-  | /* IF (cond) {bloque} ELSE {bloque} =>
-       <cond> BF idxElse  <bloque_then> BI idxEnd  idxElse  <bloque_else>  idxEnd */
-    IF PAR_IZQ condicion PAR_DER m_if bloque m_else ELSE bloque n_ifelse
+    IF m_if PAR_IZQ condicion PAR_DER bloque n_if %prec IFX
+  | IF m_if PAR_IZQ condicion PAR_DER bloque m_else ELSE bloque n_ifelse
 ;
+
 
 /* -------- Marcadores -------- */
 
@@ -718,25 +719,45 @@ m_if: {
     pushNivelIf();                // <--- marca el inicio del IF actual
     printf("    m_if: nuevo nivel de IF (nivel=%d)\n", topeNivelesIf);
 }
+;
 
 m_else:
     /* empty */ {
         int posSaltoFalso = popSalto();       // saca el salto condicional pendiente
         agregarIntermedio("BI");              // salto incondicional al final
         int posBI = reservarSalto();          // reserva posición para BI
-        completarSalto(posSaltoFalso, indiceCodigo); // completa salto falso
         pushSalto(posBI);                     // guarda BI para completarlo luego
+        completarSalto(posSaltoFalso, indiceCodigo); // completa salto falso
     }
 ;
 
-n_if: {
-    int limite = popNivelIf();    // <--- recupera el nivel de inicio del IF
-    while (topePilaSaltos > limite) {
-        int pos = popSalto();
-        completarSalto(pos, indiceCodigo);
-        printf("    n_if: completado salto en %d -> %d\n", pos, indiceCodigo);
+n_if:
+    /* empty */ {
+        printf("n_if ejecutada\n");
+        int limite = popNivelIf();
+        printf("n_if: limite=%d topeSaltos=%d\n", limite, topePilaSaltos);
+
+        while (topePilaSaltos > limite) {
+            int pos = popSalto();
+            printf("n_if: completando salto en %d -> %d\n", pos, indiceCodigo);
+            completarSalto(pos, indiceCodigo);
+        }
     }
-}
+;
+
+m_or:
+    /* marcador que se ejecuta justo después de la primera condición */
+    {
+        // Insertar salto incondicional al bloque verdadero del OR
+        int pos = popSalto();
+        agregarIntermedio("BI");
+        int posBI = reservarSalto();
+        pushSalto(posBI);  // lo completaremos al final del if
+        completarSalto(pos, indiceCodigo);
+    }
+;
+
+
 
 n_ifelse:
     /* empty */ {

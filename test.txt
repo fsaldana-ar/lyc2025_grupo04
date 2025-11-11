@@ -6,19 +6,6 @@ init {
 }
 
 
-
-#+ ===== Selecciones ===== +#
-if (a > b) {
-    write("a es mayor que b");
-}
-
-if (a < b) {
-    write("a es menor que b");
-} else {
-    write("a es mayor o igual que b");
-}
-
-
 #+ ===== Condiciones múltiples ===== +#
 if (a < b AND c > d) {
     write("Condición AND verdadera");

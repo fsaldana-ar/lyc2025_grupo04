@@ -1,51 +1,34 @@
 [0] a
 [1] b
 [2] CMP
-[3] BLE
-[4] _
-[5] a es mayor que b
-[6] WRITE
-[7] a
-[8] b
-[9] CMP
-[10] BGE
-[11] 16
-[12] a es menor que b
-[13] WRITE
-[14] BI
-[15] 18
-[16] a es mayor o igual que b
-[17] WRITE
-[18] a
-[19] b
-[20] CMP
-[21] BGE
-[22] _
-[23] c
-[24] d
-[25] CMP
-[26] BLE
-[27] _
-[28] Condición AND verdadera
-[29] WRITE
-[30] a
-[31] b
-[32] CMP
-[33] BGE
-[34] _
-[35] c
-[36] d
-[37] CMP
-[38] BLE
-[39] 41
-[40] BI
-[41] Condición OR verdadera
-[42] WRITE
-[43] a
-[44] b
-[45] CMP
-[46] BGT
-[47] _
-[48] Condición NOT verdadera
-[49] WRITE
-Total de elementos: 50
+[3] BGE
+[4] 12
+[5] c
+[6] d
+[7] CMP
+[8] BLE
+[9] 12
+[10] Condición AND verdadera
+[11] WRITE
+[12] a
+[13] b
+[14] CMP
+[15] BGE
+[16] 19
+[17] BI
+[18] 24
+[19] c
+[20] d
+[21] CMP
+[22] BLE
+[23] 26
+[24] Condición OR verdadera
+[25] WRITE
+[26] a
+[27] b
+[28] CMP
+[29] BGT
+[30] 33
+[31] Condición NOT verdadera
+[32] WRITE
+Total de elementos: 33
