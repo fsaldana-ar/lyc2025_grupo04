@@ -675,27 +675,39 @@ factor:
     }
  
   | CONVDATE PAR_IZQ CONVDATET PAR_DER {
-        /* === ACCIÓN SEMÁNTICA REEMPLAZADA === */
-        
-        // 1. Llama al "cerebro" con el string "21-08-2025"
-        int valorFechaNum = convertirFechaYYYYMMDD($3); // $3 es "21-08-2025"
+    /* Extraer y validar los datos de la fecha */
+    int dia, mes, anio;
+    if (sscanf($3, "%d-%d-%d", &dia, &mes, &anio) != 3) {
+        printf("ERROR SEMANTICO: Formato de fecha invalido (%s)\n", $3);
+        erroresSemanticos++;
+        strcpy($$, "-");
+    } else if (dia < 1 || dia > 31 || mes < 1 || mes > 12) {
+        printf("ERROR SEMANTICO: Fecha fuera de rango (dia=%d, mes=%d)\n", dia, mes);
+        erroresSemanticos++;
+        strcpy($$, "-");
+    } else {
+        /* Mostrar los valores recibidos */
+        printf("convDate recibe -> dia=%d, mes=%d, anio=%d\n", dia, mes, anio);
 
-        // 2. Convierte el resultado (20250821) de nuevo a un string
+        /* Convertir la fecha al formato YYYYMMDD */
+        int valorFechaNum = convertirFechaYYYYMMDD($3);
         char valorFechaStr[20];
         sprintf(valorFechaStr, "%d", valorFechaNum);
 
-        // 3. Agrega "20250821" a la Tabla de Símbolos como tipo "Date"
-        //    (Gracias al PASO 3, se guardará como:
-        //     NOMBRE: _20250821, TIPO: Date, VALOR: 20250821)
+        /* Mostrar la conversión */
+        printf("convDate convierte -> %s -> %s\n", $3, valorFechaStr);
+
+        /* Guardar en la tabla de símbolos como constante tipo Date */
         agregarConstante(valorFechaStr, "Date");
 
-        // 4. Pone el valor "20250821" en la Polaca Inversa
+        /* Agregar al código intermedio */
         agregarIntermedio(valorFechaStr);
 
-        // 5. El tipo de esta expresión (el factor) es "Date"
         strcpy($$, "Date");
-        printf("     convDate(CONVDATET) es Factor (tipo Date)\n");
+        printf("convDate(CONVDATET) es Factor (tipo Date)\n");
     }
+}
+
 ;
 
 /* ---------- Condiciones ---------- */

@@ -1,0 +1,6 @@
+[0] 20250821
+[1] fecha
+[2] :=
+[3] fecha
+[4] WRITE
+Total de elementos: 5

@@ -1,0 +1,22 @@
+=================================================================
+                   TABLA DE SIMBOLOS - LYC 2025
+=================================================================
+
+NOMBRE                         TIPO         VALOR        LONGITUD
+-----------------------------------------------------------------
+a                              Int                       -       
+b                              Int                       -       
+e                              Int                       -       
+f                              Int                       -       
+g                              Int                       -       
+h                              Int                       -       
+c                              Float                     -       
+d                              Float                     -       
+i                              Float                     -       
+j                              Float                     -       
+nombre                         String                    -       
+apellido                       String                    -       
+fecha                          Date                      -       
+_20250821                      Date         20250821     -       
+
+Total de entradas: 14
