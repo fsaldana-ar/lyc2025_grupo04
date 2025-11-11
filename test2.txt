@@ -9,7 +9,7 @@ init {
 
 
 #+ ===== Tema especial: convDate ===== +#
-fecha := convDate(21-08-2025);
+fecha := convDate(31-14-2025);
 write(fecha);
 
 

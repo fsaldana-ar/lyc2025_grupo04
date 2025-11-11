@@ -674,39 +674,57 @@ factor:
         printf("     Expresion entre parentesis es Factor\n"); 
     }
  
-  | CONVDATE PAR_IZQ CONVDATET PAR_DER {
-    /* Extraer y validar los datos de la fecha */
+| CONVDATE PAR_IZQ CONVDATET PAR_DER {
     int dia, mes, anio;
+
+    /* Intentar parsear la cadena con el formato esperado */
     if (sscanf($3, "%d-%d-%d", &dia, &mes, &anio) != 3) {
-        printf("ERROR SEMANTICO: Formato de fecha invalido (%s)\n", $3);
-        erroresSemanticos++;
-        strcpy($$, "-");
-    } else if (dia < 1 || dia > 31 || mes < 1 || mes > 12) {
-        printf("ERROR SEMANTICO: Fecha fuera de rango (dia=%d, mes=%d)\n", dia, mes);
-        erroresSemanticos++;
+        error_semantico("Formato de fecha invalido (se esperaba dd-mm-yyyy)");
         strcpy($$, "-");
     } else {
+        /* --- Validación detallada --- */
+        int diasEnMes[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
+
+        /* Ajustar febrero si es año bisiesto */
+        int esBisiesto = ((anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0));
+        if (esBisiesto) diasEnMes[2] = 29;
+
+        int fechaValida = 1;
+        if (anio < 1 || mes < 1 || mes > 12) {
+            fechaValida = 0;
+        } else if (dia < 1 || dia > diasEnMes[mes]) {
+            fechaValida = 0;
+        }
+
         /* Mostrar los valores recibidos */
         printf("convDate recibe -> dia=%d, mes=%d, anio=%d\n", dia, mes, anio);
 
-        /* Convertir la fecha al formato YYYYMMDD */
-        int valorFechaNum = convertirFechaYYYYMMDD($3);
-        char valorFechaStr[20];
-        sprintf(valorFechaStr, "%d", valorFechaNum);
+        if (!fechaValida) {
+            char msg[128];
+            sprintf(msg, "Fecha invalida: %02d-%02d-%04d (fuera de rango o inexistente)", dia, mes, anio);
+            error_semantico(msg);
+            strcpy($$, "-");
+        } else {
+            /* Convertir la fecha al formato YYYYMMDD */
+            int valorFechaNum = convertirFechaYYYYMMDD($3);
+            char valorFechaStr[20];
+            sprintf(valorFechaStr, "%d", valorFechaNum);
 
-        /* Mostrar la conversión */
-        printf("convDate convierte -> %s -> %s\n", $3, valorFechaStr);
+            printf("convDate convierte -> %s -> %s\n", $3, valorFechaStr);
 
-        /* Guardar en la tabla de símbolos como constante tipo Date */
-        agregarConstante(valorFechaStr, "Date");
+            /* Guardar en la tabla de símbolos como constante tipo Date */
+            agregarConstante(valorFechaStr, "Date");
 
-        /* Agregar al código intermedio */
-        agregarIntermedio(valorFechaStr);
+            /* Agregar al código intermedio */
+            agregarIntermedio(valorFechaStr);
 
-        strcpy($$, "Date");
-        printf("convDate(CONVDATET) es Factor (tipo Date)\n");
+            strcpy($$, "Date");
+            printf("convDate(CONVDATET) es Factor (tipo Date)\n");
+        }
     }
 }
+
+
 
 ;
 
