@@ -21,5 +21,5 @@ echo Compilacion completada: %EXE%
 exit /b 0
 
 :error
-echo ❌ Error en la compilación.
+echo Error en la compilación.
 goto :cleanup

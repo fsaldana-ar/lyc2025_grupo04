@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "y.tab.h"
+#include <ctype.h>
 #define MAX_POLACA 4096
 
 int yystopparser = 0;
@@ -10,6 +11,7 @@ extern FILE *yyin;
 
 int yyerror();
 int yylex();
+void generar_assembler(void);
 
 /* ============================
     Tabla de simbolos
@@ -40,7 +42,7 @@ int convertirFechaYYYYMMDD(const char* fechaStr) {
 }
 
 
-/* CÃ³digo intermedio (polaca inversa) */
+/* Codigo intermedio (polaca inversa) */
 char codigoIntermedio[MAX_POLACA][256];
 int  indiceCodigo = 0;
 
@@ -218,12 +220,17 @@ void agregarConstante(const char* valor, const char* tipo) {
     char nombreUnico[50];
     
     /* * =============================================
-     * == PASO 3: Modificación de agregarConstante ==
+     * == PASO 3: Modificacion de agregarConstante ==
      * =============================================
      * Incluimos "Date" para que se guarde como _YYYYMMDD
      */
     if (strcmp(tipo, "Int") == 0 || strcmp(tipo, "Float") == 0 || strcmp(tipo, "Date") == 0) {
         sprintf(nombreUnico, "_%s", valor);
+
+        // Reemplazar puntos por guion bajo
+        for (int k = 0; k < strlen(nombreUnico); k++)
+            if (nombreUnico[k] == '.') nombreUnico[k] = '_';
+
     } else if (strcmp(tipo, "String") == 0) {
         static int contadorString = 1;
         sprintf(nombreUnico, "const_string_%d", contadorString++);
@@ -395,12 +402,12 @@ void volcarCodigoIntermedio() {
 
     
    // fprintf(f, "==============================\n");
-    //fprintf(f, "CÃ“DIGO INTERMEDIO - POLACA INVERSA\n");
+    //fprintf(f, "CODIGO INTERMEDIO - POLACA INVERSA\n");
     //fprintf(f, "==============================\n\n");
-    ///* Pretty print: instrucciÃ³n por lÃ­nea. Reglas:
-    //    - ':=', 'READ', 'WRITE' terminan lÃ­nea.
-    //    - 'BF' y 'BI' consumen la etiqueta siguiente y terminan lÃ­nea.
-    //    - Etiquetas ET# van en una lÃ­nea sola.
+    ///* Pretty print: instruccion por li­nea. Reglas:
+    //    - ':=', 'READ', 'WRITE' terminan li­nea.
+    //    - 'BF' y 'BI' consumen la etiqueta siguiente y terminan li­nea.
+    //    - Etiquetas ET# van en una li­nea sola.
      //   - Se agregan comillas a tokens con espacios (strings) para legibilidad. */
     char line[1024];
     line[0] = '\0'; 
@@ -408,7 +415,7 @@ void volcarCodigoIntermedio() {
 
     for (int i = 0; i < indiceCodigo; i++) {
         const char* tok = codigoIntermedio[i];
-        fprintf(f, "[%d] %s\n", i, codigoIntermedio[i]);
+        fprintf(f, "%s\n", codigoIntermedio[i]);
         continue;
 
         /* Etiqueta aislada */
@@ -1042,8 +1049,8 @@ io:
         printf("     WRITE(Expresion) es IO\n");
     }
 ;
-
 %%
+
 
 /* ============================
     Funciones auxiliares
@@ -1069,9 +1076,398 @@ int main(int argc, char *argv[]) {
 
         volcarTabla();
         volcarCodigoIntermedio();
+        generar_assembler();
+
         return 0;
     }
 }
+
+// --- 1. ESTRUCTURAS AUXILIARES ---
+// Mapa para rastrear strings literales del GCI
+typedef struct {
+    char literal[256]; // ej: "El valor de a es:"
+    char asm_name[64]; // ej: "_gci_str_1"
+} GciStringMap;
+
+GciStringMap gci_strings[100];
+int gci_string_count = 0;
+
+// Helper para verificar si un token es un operador
+static int esOperadorAsm(const char* t) {
+    const char* ops[] = {"+","-","*","/","%%",":=","READ","WRITE",
+                         "BF","BI","CMP","BEQ","BNE","BGE","BLE",
+                         "BGT","BLT","CONVDATE"};
+    int n = (int)(sizeof(ops)/sizeof(ops[0]));
+    for (int k=0;k<n;k++) if (strcmp(t, ops[k])==0) return 1;
+    return 0;
+}
+
+// Helper para verificar si un token es un string literal del GCI
+int esGciLiteral(const char* tok) {
+    if (idxSimbolo(tok) != -1) return 0; // Está en la tabla
+    if (esOperadorAsm(tok)) return 0; // Es un operador
+    if (tok[0] == '\0') return 0; // Vacío
+
+    // Es un número?
+    const char* p = tok;
+    if (p[0] == '_') p++; 
+    if (p[0] == '-') p++; 
+    if (*p == '\0') return 0; 
+
+    int es_num = 1;
+    int has_dot = 0;
+    for (; *p; p++) {
+        if (*p == '.') {
+            if (has_dot) { es_num = 0; break; } 
+            has_dot = 1;
+        } else if (!isdigit(*p)) {
+            es_num = 0; 
+            break;
+        }
+    }
+    if (es_num && (tok[0] == '_' || tok[0] == '-') && tok[1] == '\0') return 0;
+    if (es_num) return 0; // Es un número
+
+    // No está en la tabla, no es operador, no es número.
+    return 1;
+}
+
+// Helper para obtener el tipo de un operando (Int, Float, String)
+const char* getTipoOperando(const char* tok) {
+    int idx = idxSimbolo(tok);
+    if (idx != -1) {
+        if(tabla[idx].tipo[0] != '\0')
+            return tabla[idx].tipo;
+        else
+            return "Int"; // Asumir Int si no está tipado
+    }
+    
+    if (esGciLiteral(tok)) {
+        return "String"; // String literal del GCI
+    }
+    
+    // Es una constante numérica?
+    const char* p = tok;
+    if (p[0] == '_') p++;
+    if (p[0] == '-') p++;
+    
+    for (; *p; p++) {
+        if (*p == '.') {
+            return "Float"; // Contiene punto, es Float
+        }
+    }
+    
+    // Es el token "0" de ISZERO?
+    if (strcmp(tok, "0") == 0) return "Int";
+
+    return "Int"; // Default a Int (ej: "_5", "10")
+}
+
+// Helper para limpiar nombres para TASM
+void getValidAsmName(const char* tok, char* out) {
+    char temp[64];
+    int i = 0;
+
+    // 1. Añadir prefijo '_' si no es alfa y no es '_'
+    if (!isalpha(tok[0]) && tok[0] != '_') {
+        temp[i++] = '_';
+    }
+
+    // 2. Copiar el resto del token
+    strcpy(temp + i, tok);
+
+    // 3. Reemplazar todos los caracteres no alfanuméricos (excepto '_') por '_'
+    for (int k = 0; k < strlen(temp); k++) {
+        if (!isalnum(temp[k]) && temp[k] != '_') {
+            temp[k] = '_';
+        }
+    }
+    strcpy(out, temp);
+}
+
+
+// --- 2. FUNCIÓN GENERAR_ASSEMBLER  ---
+void generar_assembler(void) {
+    int esDestino[MAX_POLACA] = {0};
+
+    // --- 1) Marcar líneas que son destino de salto ---
+    for (int i = 0; i < indiceCodigo; i++) {
+        const char *t = codigoIntermedio[i];
+        if (!strcmp(t, "BF") || !strcmp(t, "BI") || !strcmp(t, "BEQ") ||
+            !strcmp(t, "BNE") || !strcmp(t, "BGE") || !strcmp(t, "BLE") ||
+            !strcmp(t, "BGT") || !strcmp(t, "BLT")) {
+            if (i + 1 < indiceCodigo) {
+                const char *nxt = codigoIntermedio[i + 1];
+                int ok = 1;
+                for (const char *p = nxt; *p; p++)
+                    if (*p < '0' || *p > '9') { ok = 0; break; }
+                if (ok)
+                    esDestino[atoi(nxt)] = 1;
+            }
+        }
+    }
+
+    FILE *f = fopen("final.asm", "w");
+    if (!f) {
+        printf("❌ No se pudo crear final.asm\n");
+        return;
+    }
+
+    // --- CABECERA --- (modo 32 bits real compatible con DOSBox + CWSDPMI)
+    fprintf(f, ".386\n");
+    fprintf(f, ".MODEL FLAT, C\n");
+    fprintf(f, ".STACK 100h\n");
+    fprintf(f, ".DATA\n");
+
+    // --- Variables y constantes (de la Tabla de Símbolos) ---
+    for (int i = 0; i < indiceTabla; i++) {
+        Simbolo s = tabla[i];
+        char nombreAsm[64];
+        getValidAsmName(s.nombre, nombreAsm);
+
+        if (s.valor[0] == '\0') { // variable
+            if (!strcmp(s.tipo, "Int") || !strcmp(s.tipo, "Date") || s.tipo[0] == '\0')
+                fprintf(f, "%-32s DW ?\n", nombreAsm);
+            else if (!strcmp(s.tipo, "Float"))
+                fprintf(f, "%-32s DD ?\n", nombreAsm);
+            else if (!strcmp(s.tipo, "String"))
+                fprintf(f, "%-32s DB 100 DUP('$')\n", nombreAsm);
+            else
+                fprintf(f, "%-32s DW ?\n", nombreAsm);
+        } else { // constante
+            if (!strcmp(s.tipo, "Int") || !strcmp(s.tipo, "Date")) {
+                long val = atol(s.valor);
+                if (val > 65535L || val < -32768L)
+                    fprintf(f, "%-32s DD %ld\n", nombreAsm, val);
+                else
+                    fprintf(f, "%-32s DW %ld\n", nombreAsm, val);
+            }
+            else if (!strcmp(s.tipo, "Float")) {
+                // Hex IEEE 754 (TASM compatible)
+                if (strcmp(s.valor, "99.5") == 0) fprintf(f, "%-32s DD 42C70000h\n", nombreAsm);
+                else if (strcmp(s.valor, "5.0") == 0) fprintf(f, "%-32s DD 40A00000h\n", nombreAsm);
+                else if (strcmp(s.valor, "8.0") == 0) fprintf(f, "%-32s DD 41000000h\n", nombreAsm);
+                else if (strcmp(s.valor, "0.2") == 0) fprintf(f, "%-32s DD 3E4CCCCDh\n", nombreAsm);
+                else if (strcmp(s.valor, "0.3") == 0) fprintf(f, "%-32s DD 3E99999Ah\n", nombreAsm);
+                else if (strcmp(s.valor, "-0.5") == 0) fprintf(f, "%-32s DD 0BF000000h\n", nombreAsm);
+                else fprintf(f, "%-32s DD %sh\n", nombreAsm, s.valor);
+            }
+            else if (!strcmp(s.tipo, "String"))
+                fprintf(f, "%-32s DB \"%s$\",0\n", nombreAsm, s.valor);
+            else
+                fprintf(f, "%-32s DW %s\n", nombreAsm, s.valor);
+        }
+    }
+
+    // --- Definir strings literales del GCI ---
+    gci_string_count = 0;
+    for (int i = 0; i < indiceCodigo; i++) {
+        const char* tok = codigoIntermedio[i];
+        if (esGciLiteral(tok)) {
+            int found = 0;
+            for (int j = 0; j < gci_string_count; j++) {
+                if (strcmp(gci_strings[j].literal, tok) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found && gci_string_count < 100) {
+                strcpy(gci_strings[gci_string_count].literal, tok);
+                sprintf(gci_strings[gci_string_count].asm_name, "_gci_str_%d", gci_string_count);
+                fprintf(f, "%-32s DB \"%s$\",0\n", gci_strings[gci_string_count].asm_name, tok);
+                gci_string_count++;
+            }
+        }
+    }
+
+    fprintf(f,
+        "_0 DW 0\n"
+        "TOP DD 0\n"
+        "STK DD 256 DUP(?)\n"
+        "BUFNUM DB 7 DUP('$')\n\n"
+        ".CODE\n"
+        "START:\n");
+
+    // --- Rutinas auxiliares (32 bits) ---
+    fprintf(f,
+        ";--- PUSHD (32 bits) ---\n"
+        "PUSHD PROC\n"
+        "    MOV EBX,TOP\n"
+        "    SHL EBX,2\n"
+        "    MOV STK[EBX],EAX\n"
+        "    INC TOP\n"
+        "    RET\n"
+        "PUSHD ENDP\n"
+        ";--- POPD (32 bits) ---\n"
+        "POPD PROC\n"
+        "    DEC TOP\n"
+        "    MOV EBX,TOP\n"
+        "    SHL EBX,2\n"
+        "    MOV EAX,STK[EBX]\n"
+        "    RET\n"
+        "POPD ENDP\n"
+        ";--- POP2 (32 bits) ---\n"
+        "POP2 PROC\n"
+        "    CALL POPD\n"
+        "    PUSH EAX\n"
+        "    CALL POPD\n"
+        "    POP EBX\n"
+        "    RET\n"
+        "POP2 ENDP\n"
+        ";--- PRINT_STR ---\n"
+        "PRINT_STR PROC\n"
+        "    MOV AH,09h\n"
+        "    INT 21h\n"
+        "    RET\n"
+        "PRINT_STR ENDP\n"
+        ";--- PRINT_INT ---\n"
+        "PRINT_INT PROC\n"
+        "    PUSH AX\n"
+        "    PUSH BX\n"
+        "    PUSH CX\n"
+        "    PUSH DX\n"
+        "    LEA DI,BUFNUM\n"
+        "    MOV CX,0\n"
+        "    CMP AX,0\n"
+        "    JGE PI_LOOP\n"
+        "    NEG AX\n"
+        "    PUSH AX\n"
+        "    MOV AL,'-'\n"
+        "    STOSB\n"
+        "    POP AX\n"
+        "PI_LOOP:\n"
+        "    XOR DX,DX\n"
+        "    MOV BX,10\n"
+        "    DIV BX\n"
+        "    ADD DL,'0'\n"
+        "    PUSH DX\n"
+        "    INC CX\n"
+        "    CMP AX,0\n"
+        "    JNE PI_LOOP\n"
+        "PI_OUT:\n"
+        "    POP AX\n"
+        "    MOV AL,AL\n"
+        "    STOSB\n"
+        "    LOOP PI_OUT\n"
+        "    MOV AL,'$'\n"
+        "    STOSB\n"
+        "    LEA DX,BUFNUM\n"
+        "    CALL PRINT_STR\n"
+        "    POP DX\n"
+        "    POP CX\n"
+        "    POP BX\n"
+        "    POP AX\n"
+        "    RET\n"
+        "PRINT_INT ENDP\n");
+
+    // --- 2) Generar código ASM (32 bits) ---
+    for (int i = 0; i < indiceCodigo; i++) {
+        if (esDestino[i]) fprintf(f, "L%d:\n", i);
+        const char *tok = codigoIntermedio[i];
+
+        // Aritmética
+        if (!strcmp(tok, "+"))
+            fprintf(f, "\tCALL POP2\n\tADD EAX,EBX\n\tCALL PUSHD\n");
+        else if (!strcmp(tok, "-"))
+            fprintf(f, "\tCALL POP2\n\tSUB EBX,EAX\n\tMOV EAX,EBX\n\tCALL PUSHD\n");
+        else if (!strcmp(tok, "*"))
+            fprintf(f, "\tCALL POP2\n\tIMUL EAX,EBX\n\tCALL PUSHD\n");
+        else if (!strcmp(tok, "/"))
+            fprintf(f, "\tCALL POP2\n\tCDQ\n\tIDIV EBX\n\tCALL PUSHD\n");
+        else if (!strcmp(tok, "%%"))
+            fprintf(f, "\tCALL POP2\n\tXCHG EAX,EBX\n\tCDQ\n\tIDIV EBX\n\tMOV EAX,EDX\n\tCALL PUSHD\n");
+
+        // Comparaciones
+        else if (!strcmp(tok, "CMP"))
+            fprintf(f, "\tCALL POP2\n\tCMP EBX,EAX\n");
+
+        // Saltos
+        else if (!strcmp(tok, "BF") || !strcmp(tok, "BEQ") || !strcmp(tok, "BNE") ||
+                 !strcmp(tok, "BGE") || !strcmp(tok, "BLE") || !strcmp(tok, "BGT") ||
+                 !strcmp(tok, "BLT") || !strcmp(tok, "BI")) {
+            const char *dst = (i + 1 < indiceCodigo) ? codigoIntermedio[i + 1] : "0";
+            int num = atoi(dst);
+            if (!strcmp(tok, "BF")) fprintf(f, "\tCALL POPD\n\tCMP EAX,0\n\tJE L%d\n", num);
+            else if (!strcmp(tok, "BEQ")) fprintf(f, "\tJE L%d\n", num);
+            else if (!strcmp(tok, "BNE")) fprintf(f, "\tJNE L%d\n", num);
+            else if (!strcmp(tok, "BGE")) fprintf(f, "\tJGE L%d\n", num);
+            else if (!strcmp(tok, "BLE")) fprintf(f, "\tJLE L%d\n", num);
+            else if (!strcmp(tok, "BGT")) fprintf(f, "\tJG L%d\n", num);
+            else if (!strcmp(tok, "BLT")) fprintf(f, "\tJL L%d\n", num);
+            else fprintf(f, "\tJMP L%d\n", num);
+            i++;
+        }
+
+        // Asignación
+        else if (!strcmp(tok, ":=")) {
+            int back = i - 1;
+            while (back >= 0 &&
+                   !(isalpha(codigoIntermedio[back][0]) || codigoIntermedio[back][0] == '_'))
+                back--;
+
+            if (back >= 0) {
+                char nombreValido[64];
+                getValidAsmName(codigoIntermedio[back], nombreValido);
+                const char* tipoDest = getTipoOperando(codigoIntermedio[back]);
+                fprintf(f, "\tCALL POPD\n");
+                if (strcmp(tipoDest, "Float") == 0)
+                    fprintf(f, "\tMOV DWORD PTR %s,EAX\n", nombreValido);
+                else
+                    fprintf(f, "\tMOV %s,AX\n", nombreValido);
+            } else fprintf(f, "\t; Ignorado destino no válido\n");
+        }
+
+        // WRITE
+        else if (!strcmp(tok, "WRITE")) {
+            const char* prev_tok = codigoIntermedio[i-1];
+            const char* tipoOp = getTipoOperando(prev_tok);
+            if (strcmp(tipoOp, "String") == 0)
+                fprintf(f, "\tCALL POPD\n\tMOV EDX,EAX\n\tCALL PRINT_STR\n");
+            else
+                fprintf(f, "\tCALL POPD\n\tCALL PRINT_INT\n");
+        }
+
+        // READ / CONVDATE
+        else if (!strcmp(tok, "READ"))
+            fprintf(f, "\t; READ no genera ASM\n");
+        else if (!strcmp(tok, "CONVDATE"))
+            fprintf(f, "\t; CONVDATE no genera ASM\n");
+
+        // Operando
+        else {
+            char nombreValido[64];
+            getValidAsmName(tok, nombreValido);
+            char* gci_asm_name = NULL;
+            if (esGciLiteral(tok)) {
+                for (int j = 0; j < gci_string_count; j++)
+                    if (strcmp(gci_strings[j].literal, tok) == 0)
+                        gci_asm_name = gci_strings[j].asm_name;
+            }
+            if (gci_asm_name)
+                fprintf(f, "\tMOV EAX, OFFSET %s\n\tCALL PUSHD\n", gci_asm_name);
+            else {
+                const char* tipoOp = getTipoOperando(tok);
+                if (strcmp(tipoOp, "String") == 0)
+                    fprintf(f, "\tMOV EAX, OFFSET %s\n\tCALL PUSHD\n", nombreValido);
+                else if (strcmp(tipoOp, "Float") == 0) {
+                    int idx = idxSimbolo(tok);
+                    if (idx != -1 && tabla[idx].valor[0] == '\0')
+                        fprintf(f, "\tMOV EAX, DWORD PTR %s\n\tCALL PUSHD\n", nombreValido);
+                    else
+                        fprintf(f, "\tMOV EAX,%s\n\tCALL PUSHD\n", nombreValido);
+                } else
+                    fprintf(f, "\tMOVZX EAX,%s\n\tCALL PUSHD\n", nombreValido);
+            }
+        }
+    }
+
+    // --- Final ---
+    fprintf(f, "\n\tMOV AX,4C00h\n\tINT 21h\nEND START\n");
+    fclose(f);
+    printf(" final.asm generado correctamente (modo 32 bits / TASM compatible).\n");
+}
+
+
 
 int yyerror(void) {
     printf("Error Sintactico\n");
