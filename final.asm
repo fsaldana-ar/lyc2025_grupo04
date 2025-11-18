@@ -1,82 +1,107 @@
-.386
-.MODEL FLAT, C
+.MODEL SMALL
 .STACK 100h
 .DATA
-a                                DD ?
-b                                DD ?
-e                                DD ?
-f                                DD ?
-g                                DD ?
-h                                DD ?
-c                                DD ?
-d                                DD ?
-i                                DD ?
-j                                DD ?
+a                                DW ?
+b                                DW ?
+e                                DW ?
+f                                DW ?
+g                                DW ?
+h                                DW ?
+c                                DW ?
+d                                DW ?
+i                                DW ?
+j                                DW ?
 nombre                           DB 100 DUP('$')
 apellido                         DB 100 DUP('$')
-fecha                            DD ?
-_5                               DD 5
-_3                               DD 3
-_99_5                            DD 42C70000h
-_5_0                             DD 40A00000h
-_8_0                             DD 41000000h
-_10                              DD 10
-__2                              DD -2
-_2                               DD 2
-_0_2                             DD 3E4CCCCDh
-_0_3                             DD 3E99999Ah
-__0_5                            DD BF000000h
-const_string_1                   DB "El valor de a es:$",0
-const_string_2                   DB "a es mayor que b$",0
-const_string_3                   DB "a es menor que b$",0
-const_string_4                   DB "a es mayor o igual que b$",0
-const_string_5                   DB "Incrementando a$",0
-_1                               DD 1
-const_string_6                   DB "Ciclo anidado$",0
-const_string_7                   DB "Condicion AND verdadera$",0
-const_string_8                   DB "Condicion OR verdadera$",0
-const_string_9                   DB "Condicion NOT verdadera$",0
-const_string_10                  DB "a es igual a 10$",0
-_20250821                        DD 20250821
-_gci_str_0                       DB "El valor de a es:$",0
-_gci_str_1                       DB "a es mayor que b$",0
-_gci_str_2                       DB "a es menor que b$",0
-_gci_str_3                       DB "a es mayor o igual que b$",0
-_gci_str_4                       DB "Incrementando a$",0
-_gci_str_5                       DB "Ciclo anidado$",0
-_gci_str_6                       DB "Condicion AND verdadera$",0
-_gci_str_7                       DB "Condicion OR verdadera$",0
-_gci_str_8                       DB "Condicion NOT verdadera$",0
-_gci_str_9                       DB "a es igual a 10$",0
-_0 DD 0
-TOP DD 0
-STK DD 256 DUP(?)
+fecha                            DW ?
+_5                               DW 5
+_3                               DW 3
+_99_5                            DW 995 ; 99.5
+_5_0                             DW 50 ; 5.0
+_8_0                             DW 80 ; 8.0
+_10                              DW 10
+__2                              DW -2
+_2                               DW 2
+_0_2                             DW 2 ; 0.2
+_0_3                             DW 2 ; 0.3
+__0_5                            DW -5 ; -0.5
+_1                               DW 1
+q                                DW ?
+const_string_1                   DB "Ingrese el valor de a$"
+const_string_2                   DB "El valor de a es:$"
+_6                               DW 6
+const_string_3                   DB "NO HARDCODE$"
+const_string_4                   DB "a es mayor que b$"
+const_string_5                   DB "a es menor que b$"
+const_string_6                   DB "a es mayor o igual que b$"
+const_string_7                   DB "toque cualquier tecla para continuar$"
+const_string_8                   DB "Incrementando a$"
+_7                               DW 7
+_9                               DW 9
+const_string_9                   DB "incrementando b$"
+const_string_10                  DB "toque cualquier letra para continuar$"
+_11                              DW 11
+const_string_11                  DB "Condicion AND verdadera$"
+const_string_12                  DB "Condicion OR verdadera$"
+const_string_13                  DB "Condicion NOT verdadera$"
+const_string_14                  DB "a es igual a 10$"
+_20250821                        DW 197 ; 20250821
+const_string_15                  DB " $"
+const_string_16                  DB "Fecha:$"
+_gci_str_0                       DB "Ingrese el valor de a$"
+_gci_str_1                       DB "El valor de a es:$"
+_gci_str_2                       DB "NO HARDCODE$"
+_gci_str_3                       DB "a es mayor que b$"
+_gci_str_4                       DB "a es menor que b$"
+_gci_str_5                       DB "a es mayor o igual que b$"
+_gci_str_6                       DB "toque cualquier tecla para continuar$"
+_gci_str_7                       DB "Incrementando a$"
+_gci_str_8                       DB "incrementando b$"
+_gci_str_9                       DB "toque cualquier letra para continuar$"
+_gci_str_10                      DB "Condicion AND verdadera$"
+_gci_str_11                      DB "Condicion OR verdadera$"
+_gci_str_12                      DB "Condicion NOT verdadera$"
+_gci_str_13                      DB "a es igual a 10$"
+_gci_str_14                      DB " $"
+_gci_str_15                      DB "Fecha:$"
+fecha_date_str                   DB "20250821$"
+_0 DW 0
+__ DW 0 ; fallback para simbolo placeholder
+TOP DW 0
+STK DW 256 DUP(?)
 BUFNUM DB 7 DUP('$')
+NEWLINE DB 13,10,'$'
 
 .CODE
 START:
-;--- PUSHD ---
-PUSHD PROC
-    MOV EBX,TOP
-    SHL EBX,2
-    MOV STK[EBX],EAX
+    MOV AX,@DATA
+    MOV DS,AX
+    CALL MAIN
+    MOV AX,4C00h
+    INT 21h
+
+;--- PUSH (16 bits) ---
+PUSH_VAL PROC
+    MOV BX,TOP
+    SHL BX,1
+    MOV STK[BX],AX
     INC TOP
     RET
-PUSHD ENDP
-;--- POPD ---
-POPD PROC
+PUSH_VAL ENDP
+;--- POP (16 bits) ---
+POP_VAL PROC
     DEC TOP
-    MOV EBX,TOP
-    SHL EBX,2
-    MOV EAX,STK[EBX]
+    MOV BX,TOP
+    SHL BX,1
+    MOV AX,STK[BX]
     RET
-POPD ENDP
-;--- POP2 ---
+POP_VAL ENDP
+;--- POP2 (16 bits) ---
 POP2 PROC
-    CALL POPD
-    PUSH EAX
-    CALL POPD
-    POP EBX
+    CALL POP_VAL
+    PUSH AX
+    CALL POP_VAL
+    POP BX
     RET
 POP2 ENDP
 ;--- PRINT_STR ---
@@ -91,6 +116,13 @@ PRINT_INT PROC
     PUSH BX
     PUSH CX
     PUSH DX
+    PUSH DI
+    ; Limpiar buffer
+    LEA DI,BUFNUM
+    MOV CX,7
+    MOV AL,'$'
+    REP STOSB
+    ; Convertir numero
     LEA DI,BUFNUM
     MOV CX,0
     CMP AX,0
@@ -118,323 +150,386 @@ PI_OUT:
     STOSB
     LEA DX,BUFNUM
     CALL PRINT_STR
+    POP DI
     POP DX
     POP CX
     POP BX
     POP AX
     RET
 PRINT_INT ENDP
-	MOV EAX,_5
-	CALL PUSHD
-	MOV EAX,a
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR a,EAX
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,_3
-	CALL PUSHD
-	CALL POP2
-	ADD EAX,EBX
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR b,EAX
-	MOV EAX,_99_5
-	CALL PUSHD
-	MOV EAX,c
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR c,EAX
-	MOV EAX,_5_0
-	CALL PUSHD
-	MOV EAX,_8_0
-	CALL PUSHD
-	CALL POP2
-	IMUL EAX,EBX
-	CALL PUSHD
-	MOV EAX,d
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR d,EAX
-	MOV EAX,_10
-	CALL PUSHD
-	MOV EAX,_3
-	CALL PUSHD
-	CALL POP2
-	XCHG EAX,EBX
-	CDQ
-	IDIV EBX
-	MOV EAX,EDX
-	CALL PUSHD
-	MOV EAX,a
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR a,EAX
-	MOV EAX,__2
-	CALL PUSHD
-	MOV EAX,e
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR e,EAX
-	MOV EAX,b
-	CALL PUSHD
-	MOV EAX,a
-	CALL PUSHD
-	CALL POP2
-	SUB EBX,EAX
-	MOV EAX,EBX
-	CALL PUSHD
-	MOV EAX,e
-	CALL PUSHD
-	CALL POP2
-	IMUL EAX,EBX
-	CALL PUSHD
-	MOV EAX,_3
-	CALL PUSHD
-	CALL POP2
-	SUB EBX,EAX
-	MOV EAX,EBX
-	CALL PUSHD
-	MOV EAX,f
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR f,EAX
-	MOV EAX,b
-	CALL PUSHD
-	MOV EAX,a
-	CALL PUSHD
-	CALL POP2
-	SUB EBX,EAX
-	MOV EAX,EBX
-	CALL PUSHD
-	MOV EAX,e
-	CALL PUSHD
-	CALL POP2
-	IMUL EAX,EBX
-	CALL PUSHD
-	MOV EAX,_3
-	CALL PUSHD
-	CALL POP2
-	SUB EBX,EAX
-	MOV EAX,EBX
-	CALL PUSHD
-	MOV EAX,g
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR g,EAX
-	MOV EAX,_2
-	CALL PUSHD
-	MOV EAX,_3
-	CALL PUSHD
-	CALL POP2
-	IMUL EAX,EBX
-	CALL PUSHD
-	MOV EAX,h
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR h,EAX
-	MOV EAX,_0_2
-	CALL PUSHD
-	MOV EAX,_0_3
-	CALL PUSHD
-	CALL POP2
-	SUB EBX,EAX
-	MOV EAX,EBX
-	CALL PUSHD
-	MOV EAX,i
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR i,EAX
-	MOV EAX,__0_5
-	CALL PUSHD
-	MOV EAX,j
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR j,EAX
-	MOV EAX,a
-	CALL PUSHD
-	; READ no genera ASM
-	MOV EAX, OFFSET _gci_str_0
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-	MOV EAX,a
-	CALL PUSHD
-	CALL POPD
-	CALL PRINT_INT
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JLE L68
-	MOV EAX, OFFSET _gci_str_1
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-L68:
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JGE L77
-	MOV EAX, OFFSET _gci_str_2
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-	JMP L79
-L77:
-	MOV EAX, OFFSET _gci_str_3
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-L79:
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,_10
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JGE L107
-	MOV EAX, OFFSET _gci_str_4
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,_1
-	CALL PUSHD
-	CALL POP2
-	ADD EAX,EBX
-	CALL PUSHD
-	MOV EAX,a
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR a,EAX
-L91:
-	MOV EAX,b
-	CALL PUSHD
-	MOV EAX,_5
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JGE L105
-	MOV EAX,b
-	CALL PUSHD
-	MOV EAX,_1
-	CALL PUSHD
-	CALL POP2
-	ADD EAX,EBX
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR b,EAX
-	MOV EAX, OFFSET _gci_str_5
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-	JMP L91
-L105:
-	JMP L79
-L107:
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JGE L119
-	MOV EAX,c
-	CALL PUSHD
-	MOV EAX,d
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JLE L119
-	MOV EAX, OFFSET _gci_str_6
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-L119:
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JGE L126
-	JMP L131
-L126:
-	MOV EAX,c
-	CALL PUSHD
-	MOV EAX,d
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JLE L133
-L131:
-	MOV EAX, OFFSET _gci_str_7
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-L133:
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,b
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JG L140
-	MOV EAX, OFFSET _gci_str_8
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-L140:
-	MOV EAX,a
-	CALL PUSHD
-	MOV EAX,_10
-	CALL PUSHD
-	CALL POP2
-	SUB EBX,EAX
-	MOV EAX,EBX
-	CALL PUSHD
-	MOV EAX,_0
-	CALL PUSHD
-	CALL POP2
-	CMP EBX,EAX
-	JNE L149
-	MOV EAX, OFFSET _gci_str_9
-	CALL PUSHD
-	CALL POPD
-	MOV EDX,EAX
-	CALL PRINT_STR
-L149:
-	MOV EAX,_20250821
-	CALL PUSHD
-	MOV EAX,fecha
-	CALL PUSHD
-	CALL POPD
-	MOV DWORD PTR fecha,EAX
-	MOV EAX,fecha
-	CALL PUSHD
-	CALL POPD
-	CALL PRINT_INT
+;--- PRINT_NEWLINE ---
+PRINT_NEWLINE PROC
+    PUSH DX
+    LEA DX,NEWLINE
+    CALL PRINT_STR
+    POP DX
+    RET
+PRINT_NEWLINE ENDP
+;--- READ_INT ---
+READ_INT PROC
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX,0
+    MOV CX,0
+RI_LOOP:
+    MOV AH,01h
+    INT 21h
+    CMP AL,13
+    JE RI_END
+    CMP AL,'-'
+    JNE RI_DIGIT
+    MOV CX,1
+    JMP RI_LOOP
+RI_DIGIT:
+    SUB AL,'0'
+    MOV AH,0
+    XCHG AX,BX
+    MOV DX,10
+    MUL DX
+    ADD BX,AX
+    JMP RI_LOOP
+RI_END:
+    MOV AX,BX
+    CMP CX,1
+    JNE RI_RET
+    NEG AX
+RI_RET:
+    POP DX
+    POP CX
+    POP BX
+    RET
+READ_INT ENDP
 
-	MOV AX,4C00h
-	INT 21h
+;--- MAIN PROGRAM ---
+MAIN PROC
+	; a := _5
+	MOV AX,_5
+	MOV a,AX
+	; b := a + _3
+	MOV AX,a
+	ADD AX,_3
+	MOV b,AX
+	; c := _99_5
+	MOV AX,_99_5
+	MOV c,AX
+	; d := _5_0 * _8_0
+	MOV AX,_5_0
+	IMUL _8_0
+	CWD
+	IDIV _10
+	MOV d,AX
+	; a := _10 %% _3
+	MOV AX,_10
+	CWD
+	IDIV _3
+	MOV AX,DX
+	MOV a,AX
+	; e := __2
+	MOV AX,__2
+	MOV e,AX
+	MOV AX,b
+	CALL PUSH_VAL
+	MOV AX,a
+	CALL PUSH_VAL
+	CALL POP2
+	SUB AX,BX
+	CALL PUSH_VAL
+	MOV AX,e
+	CALL PUSH_VAL
+	CALL POP2
+	IMUL BX
+	CALL PUSH_VAL
+	MOV AX,_3
+	CALL PUSH_VAL
+	CALL POP2
+	SUB AX,BX
+	CALL PUSH_VAL
+	MOV AX,f
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV f,AX
+	MOV AX,b
+	CALL PUSH_VAL
+	MOV AX,a
+	CALL PUSH_VAL
+	CALL POP2
+	SUB AX,BX
+	CALL PUSH_VAL
+	MOV AX,e
+	CALL PUSH_VAL
+	CALL POP2
+	IMUL BX
+	CALL PUSH_VAL
+	MOV AX,_3
+	CALL PUSH_VAL
+	CALL POP2
+	SUB AX,BX
+	CALL PUSH_VAL
+	MOV AX,g
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV g,AX
+	; h := _2 * _3
+	MOV AX,_2
+	IMUL _3
+	MOV h,AX
+	; i := _0_2 - _0_3
+	MOV AX,_0_2
+	SUB AX,_0_3
+	MOV i,AX
+	; j := __0_5
+	MOV AX,__0_5
+	MOV j,AX
+	; q := _1
+	MOV AX,_1
+	MOV q,AX
+	LEA AX,_gci_str_0
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	CALL READ_INT
+	MOV a,AX
+	CALL PRINT_NEWLINE
+	LEA AX,_gci_str_1
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	MOV AX,a
+	CALL PUSH_VAL
+	CALL POP_VAL
+	CALL PRINT_INT
+	CALL PRINT_NEWLINE
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,_6
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JNE L73
+	LEA AX,_gci_str_2
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L73:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,b
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JLE L80
+	LEA AX,_gci_str_3
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L80:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,b
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JGE L89
+	LEA AX,_gci_str_4
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	JMP L91
+L89:
+	LEA AX,_gci_str_5
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L91:
+	LEA AX,_gci_str_6
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	CALL READ_INT
+	MOV q,AX
+	CALL PRINT_NEWLINE
+L95:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,_10
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JGE L126
+	LEA AX,_gci_str_7
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	; a := a + _1
+	MOV AX,a
+	ADD AX,_1
+	MOV a,AX
+	; b := _7
+	MOV AX,_7
+	MOV b,AX
+L110:
+	MOV AX,b
+	CALL PUSH_VAL
+	MOV AX,_9
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JGE L124
+	; b := b + _1
+	MOV AX,b
+	ADD AX,_1
+	MOV b,AX
+	LEA AX,_gci_str_8
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	JMP L110
+L124:
+	JMP L95
+L126:
+	LEA AX,_gci_str_9
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	CALL READ_INT
+	MOV q,AX
+	CALL PRINT_NEWLINE
+	; b := _11
+	MOV AX,_11
+	MOV b,AX
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,b
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JGE L145
+	MOV AX,c
+	CALL PUSH_VAL
+	MOV AX,d
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JLE L145
+	LEA AX,_gci_str_10
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L145:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,b
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JGE L152
+	JMP L157
+L152:
+	MOV AX,c
+	CALL PUSH_VAL
+	MOV AX,d
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JLE L159
+L157:
+	LEA AX,_gci_str_11
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L159:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,b
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JG L166
+	LEA AX,_gci_str_12
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L166:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,_11
+	CALL PUSH_VAL
+	CALL POP2
+	SUB AX,BX
+	CALL PUSH_VAL
+	MOV AX,_0
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JNE L175
+	LEA AX,_gci_str_13
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L175:
+	; fecha := _20250821
+	MOV AX,_20250821
+	MOV fecha,AX
+	LEA AX,_gci_str_14
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	LEA AX,_gci_str_14
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	LEA AX,_gci_str_14
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	LEA AX,_gci_str_15
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	MOV AX,fecha
+	CALL PUSH_VAL
+	CALL POP_VAL
+	LEA DX,fecha_date_str
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+
+	RET
+MAIN ENDP
 END START
