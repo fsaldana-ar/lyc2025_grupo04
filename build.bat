@@ -1,7 +1,7 @@
 @echo off
 setlocal enableextensions
 
-set EXE=lyc-compiler-2.0.0.exe
+set EXE=lyc-compiler-3.0.0.exe
 
 echo === Compilando lexer y parser ===
 flex Lexico.l || goto :error

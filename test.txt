@@ -22,15 +22,8 @@ q := 1;
 #+ ===== Entrada / Salida ===== +#
 write("Ingrese el valor de a");
 read(a);
-write("El valor de a es:");
-write(a);
 
 
-
-if (a == 6)
-{
-    write("NO HARDCODE");
-}
 #+ ===== Selecciones ===== +#
 if (a > b) {
     write("a es mayor que b");
@@ -45,7 +38,7 @@ if (a < b) {
 }
 
 
-write("toque cualquier tecla para continuar");
+write("Presione Enter para continuar...");
 read(q);
 
 
@@ -61,7 +54,7 @@ while (a < 10) {
 }
 
 
-write("toque cualquier letra para continuar");
+write("Presione Enter para continuar...");
 read(q);
 
 #+ ===== Condiciones multiples ===== +#

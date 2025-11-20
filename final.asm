@@ -28,42 +28,35 @@ __0_5                            DW -5 ; -0.5
 _1                               DW 1
 q                                DW ?
 const_string_1                   DB "Ingrese el valor de a$"
-const_string_2                   DB "El valor de a es:$"
-_6                               DW 6
-const_string_3                   DB "NO HARDCODE$"
-const_string_4                   DB "a es mayor que b$"
-const_string_5                   DB "a es menor que b$"
-const_string_6                   DB "a es mayor o igual que b$"
-const_string_7                   DB "toque cualquier tecla para continuar$"
-const_string_8                   DB "Incrementando a$"
+const_string_2                   DB "a es mayor que b$"
+const_string_3                   DB "a es menor que b$"
+const_string_4                   DB "a es mayor o igual que b$"
+const_string_5                   DB "Presione Enter para continuar...$"
+const_string_6                   DB "Incrementando a$"
 _7                               DW 7
 _9                               DW 9
-const_string_9                   DB "incrementando b$"
-const_string_10                  DB "toque cualquier letra para continuar$"
+const_string_7                   DB "incrementando b$"
 _11                              DW 11
-const_string_11                  DB "Condicion AND verdadera$"
-const_string_12                  DB "Condicion OR verdadera$"
-const_string_13                  DB "Condicion NOT verdadera$"
-const_string_14                  DB "a es igual a 10$"
+const_string_8                   DB "Condicion AND verdadera$"
+const_string_9                   DB "Condicion OR verdadera$"
+const_string_10                  DB "Condicion NOT verdadera$"
+const_string_11                  DB "a es igual a 10$"
 _20250821                        DW 197 ; 20250821
-const_string_15                  DB " $"
-const_string_16                  DB "Fecha:$"
+const_string_12                  DB " $"
+const_string_13                  DB "Fecha:$"
 _gci_str_0                       DB "Ingrese el valor de a$"
-_gci_str_1                       DB "El valor de a es:$"
-_gci_str_2                       DB "NO HARDCODE$"
-_gci_str_3                       DB "a es mayor que b$"
-_gci_str_4                       DB "a es menor que b$"
-_gci_str_5                       DB "a es mayor o igual que b$"
-_gci_str_6                       DB "toque cualquier tecla para continuar$"
-_gci_str_7                       DB "Incrementando a$"
-_gci_str_8                       DB "incrementando b$"
-_gci_str_9                       DB "toque cualquier letra para continuar$"
-_gci_str_10                      DB "Condicion AND verdadera$"
-_gci_str_11                      DB "Condicion OR verdadera$"
-_gci_str_12                      DB "Condicion NOT verdadera$"
-_gci_str_13                      DB "a es igual a 10$"
-_gci_str_14                      DB " $"
-_gci_str_15                      DB "Fecha:$"
+_gci_str_1                       DB "a es mayor que b$"
+_gci_str_2                       DB "a es menor que b$"
+_gci_str_3                       DB "a es mayor o igual que b$"
+_gci_str_4                       DB "Presione Enter para continuar...$"
+_gci_str_5                       DB "Incrementando a$"
+_gci_str_6                       DB "incrementando b$"
+_gci_str_7                       DB "Condicion AND verdadera$"
+_gci_str_8                       DB "Condicion OR verdadera$"
+_gci_str_9                       DB "Condicion NOT verdadera$"
+_gci_str_10                      DB "a es igual a 10$"
+_gci_str_11                      DB " $"
+_gci_str_12                      DB "Fecha:$"
 fecha_date_str                   DB "20250821$"
 _0 DW 0
 __ DW 0 ; fallback para simbolo placeholder
@@ -293,38 +286,35 @@ MAIN PROC
 	CALL READ_INT
 	MOV a,AX
 	CALL PRINT_NEWLINE
-	LEA AX,_gci_str_1
-	CALL PUSH_VAL
-	CALL POP_VAL
-	MOV DX,AX
-	CALL PRINT_STR
-	CALL PRINT_NEWLINE
-	MOV AX,a
-	CALL PUSH_VAL
-	CALL POP_VAL
-	CALL PRINT_INT
-	CALL PRINT_NEWLINE
-	MOV AX,a
-	CALL PUSH_VAL
-	MOV AX,_6
-	CALL PUSH_VAL
-	CALL POP2
-	CMP AX,BX
-	JNE L73
-	LEA AX,_gci_str_2
-	CALL PUSH_VAL
-	CALL POP_VAL
-	MOV DX,AX
-	CALL PRINT_STR
-	CALL PRINT_NEWLINE
-L73:
 	MOV AX,a
 	CALL PUSH_VAL
 	MOV AX,b
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JLE L80
+	JLE L69
+	LEA AX,_gci_str_1
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+L69:
+	MOV AX,a
+	CALL PUSH_VAL
+	MOV AX,b
+	CALL PUSH_VAL
+	CALL POP2
+	CMP AX,BX
+	JGE L78
+	LEA AX,_gci_str_2
+	CALL PUSH_VAL
+	CALL POP_VAL
+	MOV DX,AX
+	CALL PRINT_STR
+	CALL PRINT_NEWLINE
+	JMP L80
+L78:
 	LEA AX,_gci_str_3
 	CALL PUSH_VAL
 	CALL POP_VAL
@@ -332,29 +322,7 @@ L73:
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
 L80:
-	MOV AX,a
-	CALL PUSH_VAL
-	MOV AX,b
-	CALL PUSH_VAL
-	CALL POP2
-	CMP AX,BX
-	JGE L89
 	LEA AX,_gci_str_4
-	CALL PUSH_VAL
-	CALL POP_VAL
-	MOV DX,AX
-	CALL PRINT_STR
-	CALL PRINT_NEWLINE
-	JMP L91
-L89:
-	LEA AX,_gci_str_5
-	CALL PUSH_VAL
-	CALL POP_VAL
-	MOV DX,AX
-	CALL PRINT_STR
-	CALL PRINT_NEWLINE
-L91:
-	LEA AX,_gci_str_6
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
@@ -363,15 +331,15 @@ L91:
 	CALL READ_INT
 	MOV q,AX
 	CALL PRINT_NEWLINE
-L95:
+L84:
 	MOV AX,a
 	CALL PUSH_VAL
 	MOV AX,_10
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JGE L126
-	LEA AX,_gci_str_7
+	JGE L115
+	LEA AX,_gci_str_5
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
@@ -384,29 +352,29 @@ L95:
 	; b := _7
 	MOV AX,_7
 	MOV b,AX
-L110:
+L99:
 	MOV AX,b
 	CALL PUSH_VAL
 	MOV AX,_9
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JGE L124
+	JGE L113
 	; b := b + _1
 	MOV AX,b
 	ADD AX,_1
 	MOV b,AX
-	LEA AX,_gci_str_8
+	LEA AX,_gci_str_6
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-	JMP L110
-L124:
-	JMP L95
-L126:
-	LEA AX,_gci_str_9
+	JMP L99
+L113:
+	JMP L84
+L115:
+	LEA AX,_gci_str_4
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
@@ -424,59 +392,59 @@ L126:
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JGE L145
+	JGE L134
 	MOV AX,c
 	CALL PUSH_VAL
 	MOV AX,d
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JLE L145
-	LEA AX,_gci_str_10
+	JLE L134
+	LEA AX,_gci_str_7
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-L145:
+L134:
 	MOV AX,a
 	CALL PUSH_VAL
 	MOV AX,b
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JGE L152
-	JMP L157
-L152:
+	JGE L141
+	JMP L146
+L141:
 	MOV AX,c
 	CALL PUSH_VAL
 	MOV AX,d
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JLE L159
-L157:
-	LEA AX,_gci_str_11
+	JLE L148
+L146:
+	LEA AX,_gci_str_8
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-L159:
+L148:
 	MOV AX,a
 	CALL PUSH_VAL
 	MOV AX,b
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JG L166
-	LEA AX,_gci_str_12
+	JG L155
+	LEA AX,_gci_str_9
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-L166:
+L155:
 	MOV AX,a
 	CALL PUSH_VAL
 	MOV AX,_11
@@ -488,36 +456,36 @@ L166:
 	CALL PUSH_VAL
 	CALL POP2
 	CMP AX,BX
-	JNE L175
-	LEA AX,_gci_str_13
+	JNE L164
+	LEA AX,_gci_str_10
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-L175:
+L164:
 	; fecha := _20250821
 	MOV AX,_20250821
 	MOV fecha,AX
-	LEA AX,_gci_str_14
+	LEA AX,_gci_str_11
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-	LEA AX,_gci_str_14
+	LEA AX,_gci_str_11
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-	LEA AX,_gci_str_14
+	LEA AX,_gci_str_11
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX
 	CALL PRINT_STR
 	CALL PRINT_NEWLINE
-	LEA AX,_gci_str_15
+	LEA AX,_gci_str_12
 	CALL PUSH_VAL
 	CALL POP_VAL
 	MOV DX,AX

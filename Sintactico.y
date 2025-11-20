@@ -219,8 +219,11 @@ void agregarConstante(const char* valor, const char* tipo) {
 
     char nombreUnico[50];
     
-  
-     
+    /* * =============================================
+     * == PASO 3: Modificacion de agregarConstante ==
+     * =============================================
+     * Incluimos "Date" para que se guarde como _YYYYMMDD
+     */
     if (strcmp(tipo, "Int") == 0 || strcmp(tipo, "Float") == 0 || strcmp(tipo, "Date") == 0) {
         sprintf(nombreUnico, "_%s", valor);
 
@@ -361,9 +364,12 @@ void volcarTabla() {
 }
 
 
+/* ============================
+    Codigo intermedio: helpers
+    ============================ */
 
 
-
+/* Helpers para volcado de codigo intermedio */
 static int esOperadorTok(const char* t) {
     const char* ops[] = {"+","-","*","/","%%",":=","READ","WRITE",
                           "BF","BI","==","!=","<",">","<=",">=",
@@ -1077,7 +1083,7 @@ int main(int argc, char *argv[]) {
 }
 
 // --- 1. ESTRUCTURAS AUXILIARES ---
-
+// Mapa para rastrear strings literales del GCI
 typedef struct {
     char literal[256]; // ej: "El valor de a es:"
     char asm_name[64]; // ej: "_gci_str_1"
@@ -1085,23 +1091,6 @@ typedef struct {
 
 GciStringMap gci_strings[100];
 int gci_string_count = 0;
-
-// Mapeo de variables Date -> etiqueta de string imprimible del valor (e.g., "20250821$")
-typedef struct {
-    char varAsm[64];   // nombre ASM de la variable Date (p.ej., "fecha")
-    char label[64];    // etiqueta ASM de la cadena (p.ej., "fecha_date_str")
-    char value[32];    // contenido numerico en texto (p.ej., "20250821")
-} DateStringMap;
-
-DateStringMap date_strings[100];
-int date_string_count = 0;
-
-static const char* findDateLabelByVar(const char* varAsm) {
-    for (int i = 0; i < date_string_count; i++) {
-        if (strcmp(date_strings[i].varAsm, varAsm) == 0) return date_strings[i].label;
-    }
-    return NULL;
-}
 
 // Helper para verificar si un token es un operador
 static int esOperadorAsm(const char* t) {
@@ -1220,7 +1209,7 @@ void generar_assembler(void) {
 
     FILE *f = fopen("final.asm", "w");
     if (!f) {
-        printf("No se pudo crear final.asm\n");
+        printf("❌ No se pudo crear final.asm\n");
         return;
     }
 
@@ -1266,36 +1255,6 @@ void generar_assembler(void) {
         }
     }
 
-    // --- Detectar asignaciones a variables Date para imprimirlas como string ---
-    date_string_count = 0;
-    for (int i = 0; i + 2 < indiceCodigo; i++) {
-        const char* tokVal = codigoIntermedio[i];
-        const char* tokVar = codigoIntermedio[i+1];
-        const char* tokOp  = codigoIntermedio[i+2];
-        if (strcmp(tokOp, ":=") != 0) continue;
-        // ¿destino es Date?
-        const char* tipoDest = getTipoOperando(tokVar);
-        if (strcmp(tipoDest, "Date") != 0) continue;
-        // ¿valor es numero decimal puro (convDate ya redujo a entero)?
-        int esNumero = 1;
-        for (const char* p = tokVal; *p; p++) {
-            if (!isdigit((unsigned char)*p)) { esNumero = 0; break; }
-        }
-        if (!esNumero) continue;
-        // Crear etiqueta y guardar mapping
-        char varAsm[64];
-        getValidAsmName(tokVar, varAsm);
-        char lbl[64];
-        snprintf(lbl, sizeof(lbl), "%s_date_str", varAsm);
-        if (date_string_count < 100) {
-            strcpy(date_strings[date_string_count].varAsm, varAsm);
-            strcpy(date_strings[date_string_count].label, lbl);
-            strncpy(date_strings[date_string_count].value, tokVal, sizeof(date_strings[date_string_count].value)-1);
-            date_strings[date_string_count].value[sizeof(date_strings[date_string_count].value)-1] = '\0';
-            date_string_count++;
-        }
-    }
-
     // --- Definir strings literales del GCI ---
     gci_string_count = 0;
     for (int i = 0; i < indiceCodigo; i++) {
@@ -1317,14 +1276,8 @@ void generar_assembler(void) {
         }
     }
 
-    // --- Definir strings para variables Date detectadas ---
-    for (int k = 0; k < date_string_count; k++) {
-        fprintf(f, "%-32s DB \"%s$\"\n", date_strings[k].label, date_strings[k].value);
-    }
-
     fprintf(f,
         "_0 DW 0\n"
-        "__ DW 0 ; fallback para simbolo placeholder\n"
         "TOP DW 0\n"
         "STK DW 256 DUP(?)\n"
         "BUFNUM DB 7 DUP('$')\n"
@@ -1478,15 +1431,10 @@ void generar_assembler(void) {
         if (i + 2 < indiceCodigo && !strcmp(codigoIntermedio[i+2], ":=")) {
             const char* valor = tok;
             const char* destino = codigoIntermedio[i+1];
-
-            // Aceptar constantes numéricas (incluye negativas) o IDs como valor,
-            // pero nunca operadores como '-', '+', etc.
-            int valorIsNegNum = (valor[0] == '-' && strlen(valor) > 1 && isdigit((unsigned char)valor[1]));
-            int valorIsOperand = (isalpha((unsigned char)valor[0]) || isdigit((unsigned char)valor[0]) || valor[0] == '_' || valorIsNegNum);
-            int valorIsOperator = (!strcmp(valor, "+") || !strcmp(valor, "-") || !strcmp(valor, "*") || !strcmp(valor, "/") || !strcmp(valor, "%%"));
-            int destinoIsId = (isalpha((unsigned char)destino[0]) || destino[0] == '_');
-
-            if (valorIsOperand && !valorIsOperator && destinoIsId) {
+            
+            // Verificar que valor no es una variable y destino sí lo es
+            if ((isdigit(valor[0]) || valor[0] == '-' || valor[0] == '_') &&
+                (isalpha(destino[0]) || destino[0] == '_')) {
                 char nombreDest[64], nombreVal[64];
                 getValidAsmName(destino, nombreDest);
                 getValidAsmName(valor, nombreVal);
@@ -1520,28 +1468,13 @@ void generar_assembler(void) {
                 fprintf(f, "\t; %s := %s %s %s\n", dest, val1, op, val2);
                 fprintf(f, "\tMOV AX,%s\n", val1);
 
-                // Deteccion de tipos para ajuste de escala en Float (x10)
-                const char* t1 = getTipoOperando(tok1);
-                const char* t2 = getTipoOperando(tok2);
-                int bothFloat = (!strcmp(t1, "Float") && !strcmp(t2, "Float"));
-
                 if (!strcmp(op, "+"))
                     fprintf(f, "\tADD AX,%s\n", val2);
                 else if (!strcmp(op, "-"))
                     fprintf(f, "\tSUB AX,%s\n", val2);
                 else if (!strcmp(op, "*"))
-                {
                     fprintf(f, "\tIMUL %s\n", val2);
-                    if (bothFloat) {
-                        // Producto de dos floats (escala x10 -> x100). Re-normalizar dividiendo por 10.
-                        fprintf(f, "\tCWD\n\tIDIV _10\n");
-                    }
-                }
                 else if (!strcmp(op, "/") || !strcmp(op, "%%")) {
-                    if (!strcmp(op, "/") && bothFloat) {
-                        // División de floats: multiplicar numerador por 10 para mantener escala x10
-                        fprintf(f, "\tIMUL _10\n");
-                    }
                     fprintf(f, "\tCWD\n\tIDIV %s\n", val2);
                     if (!strcmp(op, "%%"))
                         fprintf(f, "\tMOV AX,DX\n");
@@ -1557,17 +1490,17 @@ void generar_assembler(void) {
         if (!strcmp(tok, "+"))
             fprintf(f, "\tCALL POP2\n\tADD AX,BX\n\tCALL PUSH_VAL\n");
         else if (!strcmp(tok, "-"))
-            fprintf(f, "\tCALL POP2\n\tSUB AX,BX\n\tCALL PUSH_VAL\n");
+            fprintf(f, "\tCALL POP2\n\tSUB BX,AX\n\tMOV AX,BX\n\tCALL PUSH_VAL\n");
         else if (!strcmp(tok, "*"))
             fprintf(f, "\tCALL POP2\n\tIMUL BX\n\tCALL PUSH_VAL\n");
         else if (!strcmp(tok, "/"))
-            fprintf(f, "\tCALL POP2\n\tCWD\n\tIDIV BX\n\tCALL PUSH_VAL\n");
+            fprintf(f, "\tCALL POP2\n\tXCHG AX,BX\n\tCWD\n\tIDIV BX\n\tCALL PUSH_VAL\n");
         else if (!strcmp(tok, "%%"))
-            fprintf(f, "\tCALL POP2\n\tCWD\n\tIDIV BX\n\tMOV AX,DX\n\tCALL PUSH_VAL\n");
+            fprintf(f, "\tCALL POP2\n\tXCHG AX,BX\n\tCWD\n\tIDIV BX\n\tMOV AX,DX\n\tCALL PUSH_VAL\n");
 
         // Comparaciones
         else if (!strcmp(tok, "CMP"))
-            fprintf(f, "\tCALL POP2\n\tCMP AX,BX\n");
+            fprintf(f, "\tCALL POP2\n\tCMP BX,AX\n");
 
         // Saltos
         else if (!strcmp(tok, "BF") || !strcmp(tok, "BEQ") || !strcmp(tok, "BNE") ||
@@ -1604,23 +1537,10 @@ void generar_assembler(void) {
         else if (!strcmp(tok, "WRITE")) {
             const char* prev_tok = codigoIntermedio[i-1];
             const char* tipoOp = getTipoOperando(prev_tok);
-            if (strcmp(tipoOp, "String") == 0) {
+            if (strcmp(tipoOp, "String") == 0)
                 fprintf(f, "\tCALL POP_VAL\n\tMOV DX,AX\n\tCALL PRINT_STR\n\tCALL PRINT_NEWLINE\n");
-            }
-            else if (strcmp(tipoOp, "Date") == 0) {
-                // Imprimir la versión string del Date si la tenemos
-                char varAsm[64];
-                getValidAsmName(prev_tok, varAsm);
-                const char* lbl = findDateLabelByVar(varAsm);
-                fprintf(f, "\tCALL POP_VAL\n"); // equilibrar la pila
-                if (lbl)
-                    fprintf(f, "\tLEA DX,%s\n\tCALL PRINT_STR\n\tCALL PRINT_NEWLINE\n", lbl);
-                else
-                    fprintf(f, "\tCALL PRINT_INT\n\tCALL PRINT_NEWLINE\n");
-            }
-            else {
+            else
                 fprintf(f, "\tCALL POP_VAL\n\tCALL PRINT_INT\n\tCALL PRINT_NEWLINE\n");
-            }
         }
 
         // READ / CONVDATE
@@ -1670,7 +1590,7 @@ void generar_assembler(void) {
     // --- Final ---
     fprintf(f, "\n\tRET\nMAIN ENDP\nEND START\n");
     fclose(f);
-    printf(" final.asm generado correctamente.\n");
+    printf(" final.asm generado correctamente (modo 16 bits / TASM compatible).\n");
 }
 
 
@@ -1678,4 +1598,4 @@ void generar_assembler(void) {
 int yyerror(void) {
     printf("Error Sintactico\n");
     exit(1);
-}
+}z

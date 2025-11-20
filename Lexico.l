@@ -14,7 +14,6 @@ int yyerror(void);
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-/* Esta es la definición de nuestro token de fecha */
 CONVDATET   ({DIGITO}{1,2}"-"{DIGITO}{1,2}"-"{DIGITO}{4})
 CTE_INT     -?{DIGITO}+
 CTE_FLOAT   -?({DIGITO}+"."{DIGITO}*)|("."{DIGITO}+)
@@ -77,13 +76,11 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 
 {CTE_INT} {
     long v = atol(yytext);
-    /* Int de 16 bits con signo: rango -32768 a 32767 */
     if (v > 32767 || v < -32768) {
         printf("ERROR LEXICO: Constante entera fuera de rango (Int 16 bits): %s\n", yytext);
         exit(1);
     }
-    /* No imprimas aquí, es mejor hacerlo en el parser
-       printf("\nConstante Entera (Int 16 bits): %s\n", yytext); */
+
     strcpy(yylval.cadena, yytext);
     return CTE_INT;
 }
@@ -98,15 +95,12 @@ ID          {LETRA}({LETRA}|{DIGITO})*
         printf("ERROR LEXICO: separador decimal inválido, use '.' en lugar de ',' (%s)\n", yytext);
         exit(1);
     }
-    /* No imprimas aquí
-       printf("\nConstante Real (Float 32 bits): %s\n", yytext); */
+
     strcpy(yylval.cadena, yytext);
     return CTE_FLOAT;
 }
 
 {CONVDATET} {
-    /* Validar formato: debe tener el formato DD-MM-YYYY */
-    /* (Mejoré tu sscanf para permitir 1 o 2 dígitos en día/mes) */
     int d, m, y;
     if (sscanf(yytext, "%d-%d-%d", &d, &m, &y) != 3 || y < 1000) {
         printf("ERROR LEXICO: Fecha debe tener formato DD-MM-YYYY (%s)\n", yytext);
@@ -117,8 +111,6 @@ ID          {LETRA}({LETRA}|{DIGITO})*
         exit(1);
     }
 
-    /* No imprimas aquí
-       printf("\nConvdate (Convdate 32 bits): %s\n", yytext); */
     strcpy(yylval.cadena, yytext);
     return CONVDATET;
 }
@@ -139,8 +131,7 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 
 {ID} {
     if(strlen(yytext)>30){ printf("ERROR LEXICO: id largo\n"); exit(1); }
-    /* No imprimas aquí
-       printf("\nID detectado: %s\n", yytext); */
+
     strcpy(yylval.cadena, yytext);
     return ID;
 }
@@ -149,4 +140,3 @@ ID          {LETRA}({LETRA}|{DIGITO})*
 .             { printf("ERROR LEXICO: Caracter no reconocido '%s' en linea %d\n", yytext, yylineno); exit(1); }
 
 %%
-

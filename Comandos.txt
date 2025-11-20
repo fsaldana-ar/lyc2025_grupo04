@@ -1,2 +1,7 @@
 comando 1: cd "directorio del archivo"
-comando 2: lyc-compiler-2.0.0.exe test.txt
+comando 2: lyc-compiler-3.0.0.exe test.txt
+
+asm\TASM\tasm final.asm
+asm\TASM\tlink final.obj
+
+final.exe
