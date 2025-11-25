@@ -1,0 +1,143 @@
+#+ ===== Declaracion de variables ===== +#
+init {
+    a, b, e, f, g, h, q : Int;
+    c, d, i, j : Float;
+    nombre, apellido : String;
+    fecha : Date;
+}
+
+#+ ===== Asignaciones validas ===== +#
+a := 5;
+b := a + 3;
+c := 99.5;
+d := 5.0 * 8.0;
+a := 10 % 3;
+e := -2;
+f := ((b - a) * e) - 3;
+g := ((b - a) * e) - (3);
+h := 2 * 3;
+i := 0.2 - 0.3;
+j := -0.5;
+q := 1;
+#+ ===== Entrada / Salida ===== +#
+write("Ingrese el valor de a");
+read(a);
+write("El valor de a es:");
+write(a);
+
+
+
+
+#+ ===== Selecciones ===== +#
+if (a > b) {
+    write("a es mayor que b");
+}
+
+
+
+if (a < b) {
+    write("a es menor que b");
+} else {
+    write("a es mayor o igual que b");
+}
+
+
+write("Toque cualquier tecla para continuar");
+read(q);
+
+
+#+ ===== While con ciclo anidado ===== +#
+while (a < 10) {
+    write("Incrementando a");
+    a := a + 1;
+    b:=7;
+    while (b < 9) {
+        b := b + 1;
+        write("incrementando b");
+    }
+}
+
+
+write("Toque cualquier letra para continuar");
+read(q);
+
+#+ ===== Condiciones multiples ===== +#
+
+
+b:=11;
+
+if (a < b AND c > d) {
+    write("Condicion AND verdadera");
+}
+
+if (a < b OR c > d) {
+    write("Condicion OR verdadera");
+}
+
+if (NOT a > b) {
+    write("Condicion NOT verdadera");
+}
+
+
+
+
+
+#+ ===== Tema especial: isZero ===== +#
+if (isZero(a - 10)) {
+    write("a es igual a 10");
+}
+
+#+ ===== Tema especial: convDate ===== +#
+fecha := convDate(21-01-2025);
+
+write("Fecha:");
+write(fecha);
+
+#+ =================================================================== +#
+#+ ===== Casos de error lexico/sintactico (comentados) ============= +#
+#+ =================================================================== +#
+
+#+ ERROR: Identificador demasiado largo, deberia fallar +#
+#+ variableconnombreexcesivamentelargoquedebefallar := 1; +#
+
+#+ ERROR: Constante fuera de rango, deberia fallar +#
+#+ a := 40000; +#
+
+#+ ERROR: String demasiado largo, deberia fallar +#
+#+ write("Este string es demasiado largo y deberia dar error porque supera los cincuenta caracteres permitidos por el lenguaje"); +#
+
+
+#+ ================================== +#
+#+ ===== VALIDACIONES SEMANTICAS ==== +#
+#+ ================================= +#
+
+#+ 1 Error Variable ya declarada +#
+#+ init { a : Int; } +#
+
+
+#+ 2 Error Asignacion de tipo incompatible (id := constante) +#
+#+ a := "Esto es un string"; +#
+#+ nombre := 123; +#
+
+
+
+#+ 3 Error Asignacion de tipo incompatible (id := id) +#
+#+a := nombre; +#
+#+ fecha := a; +#
+#+ fecha := 12.4; +#
+
+#+ 4 Error Uso de variable no declarada +#
+#+ variablenodeclarada := 10; +#
+#+ write(variablenodeclarada2); +#
+
+
+#+ 5 Error Comparacion de tipos incompatibles +#
+#+ if (a > nombre) { write("Error"); } +#
+#+ if (fecha == a) { write("Error"); }  +#
+#+ if (nombre != c) { write("Error"); } +#
+
+
+#+ 6 Error Operacion aritmetica con tipos no numericos +#
+#+ a := a + nombre; +#
+#+ a := 10 * fecha; +#
+#+ a := 5 % nombre; +#

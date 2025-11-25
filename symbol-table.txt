@@ -1,0 +1,52 @@
+==================================================================================================
+                                    TABLA DE SIMBOLOS - LYC 2025
+==================================================================================================
+
+NOMBRE                                TIPO         VALOR                                  LONGITUD
+--------------------------------------------------------------------------------------------------
+a                                     Int                                                 -       
+b                                     Int                                                 -       
+e                                     Int                                                 -       
+f                                     Int                                                 -       
+g                                     Int                                                 -       
+h                                     Int                                                 -       
+q                                     Int                                                 -       
+c                                     Float                                               -       
+d                                     Float                                               -       
+i                                     Float                                               -       
+j                                     Float                                               -       
+nombre                                String                                              -       
+apellido                              String                                              -       
+fecha                                 Date                                                -       
+_5                                    Int          5                                      -       
+_3                                    Int          3                                      -       
+_99_5                                 Float        99.5                                   -       
+_5_0                                  Float        5.0                                    -       
+_8_0                                  Float        8.0                                    -       
+_10                                   Int          10                                     -       
+_-2                                   Int          -2                                     -       
+_2                                    Int          2                                      -       
+_0_2                                  Float        0.2                                    -       
+_0_3                                  Float        0.3                                    -       
+_-0_5                                 Float        -0.5                                   -       
+_1                                    Int          1                                      -       
+_Ingrese_el_valor_de_a                String       Ingrese el valor de a                  21      
+_El_valor_de_a_es:                    String       El valor de a es:                      17      
+_a_es_mayor_que_b                     String       a es mayor que b                       16      
+_a_es_menor_que_b                     String       a es menor que b                       16      
+_a_es_mayor_o_igual_que_b             String       a es mayor o igual que b               24      
+_Toque_cualquier_tecla_para_continuar String       Toque cualquier tecla para continuar   36      
+_Incrementando_a                      String       Incrementando a                        15      
+_7                                    Int          7                                      -       
+_9                                    Int          9                                      -       
+_incrementando_b                      String       incrementando b                        15      
+_Toque_cualquier_letra_para_continuar String       Toque cualquier letra para continuar   36      
+_11                                   Int          11                                     -       
+_Condicion_AND_verdadera              String       Condicion AND verdadera                23      
+_Condicion_OR_verdadera               String       Condicion OR verdadera                 22      
+_Condicion_NOT_verdadera              String       Condicion NOT verdadera                23      
+_a_es_igual_a_10                      String       a es igual a 10                        15      
+_20250121                             Date         20250121                               -       
+_Fecha:                               String       Fecha:                                 6       
+
+Total de entradas: 44
